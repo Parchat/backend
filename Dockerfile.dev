@@ -1,0 +1,15 @@
+FROM golang:1.24-alpine AS builder
+
+WORKDIR /app
+
+RUN go install github.com/air-verse/air@latest
+
+# Copiar archivos de dependencias
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Exponer el puerto
+EXPOSE 8080
+
+# Ejecutar la aplicación
+CMD ["air", "-c", ".air.toml"]

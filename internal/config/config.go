@@ -7,17 +7,17 @@ import (
 
 // Config contiene la configuración de la aplicación
 type Config struct {
-	Port            string
+	Port             string
 	FirebaseCredFile string
-	Environment     string
+	Environment      string
 }
 
 // NewConfig crea una nueva instancia de Config
 func NewConfig() *Config {
 	return &Config{
-		Port:            getEnv("PORT", "8080"),
+		Port:             getEnv("PORT", "8080"),
 		FirebaseCredFile: getEnv("FIREBASE_CREDENTIALS", "./firebase-credentials.json"),
-		Environment:     getEnv("ENVIRONMENT", "development"),
+		Environment:      getEnv("ENVIRONMENT", "development"),
 	}
 }
 
@@ -34,7 +34,7 @@ func (c *Config) GetFirebaseCredentialsPath() string {
 	if filepath.IsAbs(c.FirebaseCredFile) {
 		return c.FirebaseCredFile
 	}
-	
+
 	// Si es una ruta relativa, convertirla a absoluta
 	absPath, err := filepath.Abs(c.FirebaseCredFile)
 	if err != nil {

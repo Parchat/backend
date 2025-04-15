@@ -4,7 +4,7 @@ Este proyecto implementa una API para una plataforma de mensajería utilizando G
 
 ## Estructura del Proyecto
 
-\`\`\`
+```
 .
 ├── cmd
 │   └── api
@@ -27,11 +27,11 @@ Este proyecto implementa una API para una plataforma de mensajería utilizando G
 ├── .env.example              # Ejemplo de variables de entorno
 ├── go.mod                    # Dependencias de Go
 └── README.md                 # Documentación
-\`\`\`
+```
 
 ## Requisitos
 
-- Go 1.18 o superior
+- [Docker Compose](https://docs.docker.com/compose/install/)
 - Cuenta de Firebase con Authentication habilitado
 - Archivo de credenciales de Firebase Admin SDK
 
@@ -39,25 +39,26 @@ Este proyecto implementa una API para una plataforma de mensajería utilizando G
 
 1. Crea un archivo `.env` basado en `.env.example`:
 
-\`\`\`bash
+```bash
 cp .env.example .env
-\`\`\`
+```
 
 2. Configura las variables de entorno en el archivo `.env`:
 
-\`\`\`
+```
 PORT=8080
 FIREBASE_CREDENTIALS=./path/to/your/firebase-credentials.json
 ENVIRONMENT=development
-\`\`\`
+```
 
 3. Asegúrate de tener el archivo de credenciales de Firebase Admin SDK en la ubicación especificada.
 
 ## Ejecución
 
-\`\`\`bash
-go run cmd/api/main.go
-\`\`\`
+```bash
+docker-compose up # Correr la aplicación
+docker-compose down # Parar la aplicación
+```
 
 ## Endpoints
 
@@ -74,9 +75,9 @@ go run cmd/api/main.go
 
 Para acceder a los endpoints protegidos, debes incluir un token de ID de Firebase en el encabezado `Authorization`:
 
-\`\`\`
+```
 Authorization: Bearer <token>
-\`\`\`
+```
 
 ## Desarrollo
 
