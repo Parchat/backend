@@ -1,4 +1,4 @@
-# API de Mensajería con Go, Fx y Firebase Authentication
+# API de Parchat
 
 Este proyecto implementa una API para una plataforma de mensajería utilizando Go, Fx para la gestión de dependencias y Firebase Authentication para la autenticación de usuarios.
 
@@ -56,8 +56,7 @@ ENVIRONMENT=development
 ## Ejecución
 
 ```bash
-docker-compose up # Correr la aplicación
-docker-compose down # Parar la aplicación
+docker-compose up
 ```
 
 ## Endpoints

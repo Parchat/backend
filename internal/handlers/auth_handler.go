@@ -7,28 +7,20 @@ import (
 	"github.com/Parchat/backend/internal/services"
 )
 
-// UserHandler maneja las peticiones relacionadas con usuarios
-type UserHandler struct {
-	userService *services.UserService
+// AuthHandler maneja las peticiones relacionadas con usuarios
+type AuthHandler struct {
+	userService *services.AuthService
 }
 
-// NewUserHandler crea una nueva instancia de UserHandler
-func NewUserHandler(userService *services.UserService) *UserHandler {
-	return &UserHandler{
+// NewAuthHandler crea una nueva instancia de AuthHandler
+func NewAuthHandler(userService *services.AuthService) *AuthHandler {
+	return &AuthHandler{
 		userService: userService,
 	}
 }
 
-// AuthStatus devuelve el estado de autenticación
-func (h *UserHandler) AuthStatus(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status": "Authentication service is running",
-	})
-}
-
 // GetCurrentUser obtiene el usuario actual
-func (h *UserHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	// Obtener el ID del usuario del contexto
 	userID, ok := r.Context().Value("userID").(string)
 	if !ok {

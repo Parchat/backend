@@ -13,7 +13,7 @@ import (
 
 // NewRouter crea un nuevo router HTTP
 func NewRouter(
-	userHandler *handlers.UserHandler,
+	authHandler *handlers.AuthHandler,
 	authMw *authMiddleware.AuthMiddleware,
 ) http.Handler {
 	r := chi.NewRouter()
@@ -31,14 +31,9 @@ func NewRouter(
 		MaxAge:           300,
 	}))
 
-	// Rutas públicas
+	// Ruta pública
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
-	})
-
-	// Rutas de autenticación (no requieren token)
-	r.Route("/api/v1/auth", func(r chi.Router) {
-		r.Get("/status", userHandler.AuthStatus)
 	})
 
 	// Rutas protegidas (requieren token)
@@ -47,8 +42,8 @@ func NewRouter(
 		r.Use(authMw.VerifyToken)
 
 		// Rutas de usuario
-		r.Route("/users", func(r chi.Router) {
-			r.Get("/me", userHandler.GetCurrentUser)
+		r.Route("/auth", func(r chi.Router) {
+			r.Get("/me", authHandler.GetCurrentUser)
 		})
 	})
 
