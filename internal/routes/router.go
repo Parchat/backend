@@ -14,6 +14,7 @@ import (
 // NewRouter crea un nuevo router HTTP
 func NewRouter(
 	authHandler *handlers.AuthHandler,
+	userHandler *handlers.UserHandler,
 	authMw *authMiddleware.AuthMiddleware,
 ) http.Handler {
 	r := chi.NewRouter()
@@ -34,6 +35,10 @@ func NewRouter(
 	// Ruta pública
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
+	})
+
+	r.Route("/users", func(r chi.Router) {
+		r.Post("/", userHandler.CreateUser) // Ruta para crear un usuario
 	})
 
 	// Rutas protegidas (requieren token)

@@ -13,6 +13,7 @@ import (
 	"github.com/Parchat/backend/internal/config"
 	"github.com/Parchat/backend/internal/handlers"
 	"github.com/Parchat/backend/internal/middleware"
+	"github.com/Parchat/backend/internal/repositories"
 	"github.com/Parchat/backend/internal/routes"
 	"github.com/Parchat/backend/internal/services"
 )
@@ -29,8 +30,12 @@ func main() {
 			config.NewConfig,
 			auth.NewFirebaseApp,
 			auth.NewFirebaseAuth,
+			auth.NewFirestoreClient,
+			repositories.NewUserRepository,
 			services.NewAuthService,
+			services.NewUserService,
 			handlers.NewAuthHandler,
+			handlers.NewUserHandler,
 			middleware.NewAuthMiddleware,
 			routes.NewRouter,
 		),

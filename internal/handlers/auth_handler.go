@@ -9,13 +9,13 @@ import (
 
 // AuthHandler maneja las peticiones relacionadas con usuarios
 type AuthHandler struct {
-	userService *services.AuthService
+	authService *services.AuthService
 }
 
 // NewAuthHandler crea una nueva instancia de AuthHandler
 func NewAuthHandler(userService *services.AuthService) *AuthHandler {
 	return &AuthHandler{
-		userService: userService,
+		authService: userService,
 	}
 }
 
@@ -29,7 +29,7 @@ func (h *AuthHandler) GetCurrentUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Obtener el usuario
-	user, err := h.userService.GetUserByID(r.Context(), userID)
+	user, err := h.authService.GetUserByID(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "Error getting user: "+err.Error(), http.StatusInternalServerError)
 		return

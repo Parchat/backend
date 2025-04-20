@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
 	"google.golang.org/api/option"
@@ -21,6 +22,11 @@ type FirebaseAuth struct {
 	Client *auth.Client
 }
 
+// FirestoreClient representa el cliente de Firestore
+type FirestoreClient struct {
+	Client *firestore.Client
+}
+
 // NewFirebaseApp crea una nueva instancia de FirebaseApp
 func NewFirebaseApp(cfg *config.Config) (*FirebaseApp, error) {
 	ctx := context.Background()
@@ -34,6 +40,9 @@ func NewFirebaseApp(cfg *config.Config) (*FirebaseApp, error) {
 		log.Fatalf("Error initializing Firebase app: %v", err)
 		return nil, err
 	}
+
+	// Imprimir conexión exitosa
+	log.Println("Firebase app initialized successfully")
 
 	return &FirebaseApp{App: app}, nil
 }
@@ -49,6 +58,9 @@ func NewFirebaseAuth(app *FirebaseApp) (*FirebaseAuth, error) {
 		return nil, err
 	}
 
+	// Imprimir conexión exitosa
+	log.Println("Firebase auth client initialized successfully")
+
 	return &FirebaseAuth{Client: client}, nil
 }
 
@@ -60,4 +72,21 @@ func (fa *FirebaseAuth) VerifyIDToken(ctx context.Context, idToken string) (*aut
 // GetUser obtiene un usuario por su UID
 func (fa *FirebaseAuth) GetUser(ctx context.Context, uid string) (*auth.UserRecord, error) {
 	return fa.Client.GetUser(ctx, uid)
+}
+
+// NewFirestoreClient crea un nuevo cliente de Firestore
+func NewFirestoreClient(app *FirebaseApp) (*FirestoreClient, error) {
+	ctx := context.Background()
+
+	// Crear un cliente de Firestore
+	client, err := app.App.Firestore(ctx)
+	if err != nil {
+		log.Fatalf("Error creating Firestore client: %v", err)
+		return nil, err
+	}
+
+	// Imprimir conexión exitosa
+	log.Println("Firestore client initialized successfully")
+
+	return &FirestoreClient{Client: client}, nil
 }
