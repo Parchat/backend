@@ -4,7 +4,7 @@ import "time"
 
 // User representa un usuario en la aplicación
 type User struct {
-	ID          string `json:"id" firestore:"id"`
+	UID         string `json:"uid" firestore:"uid"`
 	Email       string `json:"email" firestore:"email"`
 	DisplayName string `json:"displayName" firestore:"displayName"`
 	PhotoURL    string `json:"photoUrl" firestore:"photoUrl"`

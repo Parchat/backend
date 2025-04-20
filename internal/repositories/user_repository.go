@@ -28,7 +28,7 @@ func (r *UserRepository) CreateUser(user *models.User) error {
 	user.UpdatedAt = time.Now()
 
 	// Guardar el usuario en Firestore
-	_, err := r.FirestoreClient.Client.Collection("users").Doc(user.ID).Set(ctx, user)
+	_, err := r.FirestoreClient.Client.Collection("users").Doc(user.UID).Set(ctx, user)
 	if err != nil {
 		return err
 	}

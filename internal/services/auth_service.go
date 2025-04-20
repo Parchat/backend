@@ -29,7 +29,7 @@ func (s *AuthService) GetUserByID(ctx context.Context, userID string) (*models.U
 
 	// Convertir a nuestro modelo de usuario
 	user := &models.User{
-		ID:          firebaseUser.UID,
+		UID:         firebaseUser.UID,
 		Email:       firebaseUser.Email,
 		DisplayName: firebaseUser.DisplayName,
 		PhotoURL:    firebaseUser.PhotoURL,
