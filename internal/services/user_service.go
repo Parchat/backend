@@ -11,12 +11,6 @@ type UserService struct {
 	FirebaseAuth *config.FirebaseAuth
 }
 
-// UserToCreate represents the data required to create a user in Firebase Auth
-type UserToCreate struct {
-	Email    string
-	Password string
-}
-
 // NewUserService crea una nueva instancia de UserService
 func NewUserService(userRepo *repositories.UserRepository, firebaseAuth *config.FirebaseAuth) *UserService {
 	return &UserService{
