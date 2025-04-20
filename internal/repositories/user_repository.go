@@ -4,16 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/Parchat/backend/internal/auth"
+	"github.com/Parchat/backend/internal/config"
 	"github.com/Parchat/backend/internal/models"
 )
 
 type UserRepository struct {
-	FirestoreClient *auth.FirestoreClient
+	FirestoreClient *config.FirestoreClient
 }
 
 // NewUserRepository crea una nueva instancia de UserRepository
-func NewUserRepository(client *auth.FirestoreClient) *UserRepository {
+func NewUserRepository(client *config.FirestoreClient) *UserRepository {
 	return &UserRepository{
 		FirestoreClient: client,
 	}

@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/Parchat/backend/internal/auth"
+	"github.com/Parchat/backend/internal/config"
 )
 
 // AuthMiddleware representa el middleware de autenticación
 type AuthMiddleware struct {
-	firebaseAuth *auth.FirebaseAuth
+	firebaseAuth *config.FirebaseAuth
 }
 
 // NewAuthMiddleware crea una nueva instancia de AuthMiddleware
-func NewAuthMiddleware(firebaseAuth *auth.FirebaseAuth) *AuthMiddleware {
+func NewAuthMiddleware(firebaseAuth *config.FirebaseAuth) *AuthMiddleware {
 	return &AuthMiddleware{
 		firebaseAuth: firebaseAuth,
 	}

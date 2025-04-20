@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"firebase.google.com/go/v4/auth"
-	authP "github.com/Parchat/backend/internal/auth"
+	"github.com/Parchat/backend/internal/config"
 	"github.com/Parchat/backend/internal/models"
 	"github.com/Parchat/backend/internal/repositories"
 )
 
 type UserService struct {
 	UserRepo     *repositories.UserRepository
-	FirebaseAuth *authP.FirebaseAuth
+	FirebaseAuth *config.FirebaseAuth
 }
 
 // UserToCreate represents the data required to create a user in Firebase Auth
@@ -21,7 +21,7 @@ type UserToCreate struct {
 }
 
 // NewUserService crea una nueva instancia de UserService
-func NewUserService(userRepo *repositories.UserRepository, firebaseAuth *authP.FirebaseAuth) *UserService {
+func NewUserService(userRepo *repositories.UserRepository, firebaseAuth *config.FirebaseAuth) *UserService {
 	return &UserService{
 		UserRepo:     userRepo,
 		FirebaseAuth: firebaseAuth,
@@ -35,12 +35,10 @@ func (s *UserService) CreateUser(user *models.User) error {
 		return err
 	}
 
-	//fmt.Println("User created successfully:", user)
-
 	return nil
 }
 
-// CreateUserWithAuth crea un usuario en Firebase Authentication y Firestore
+// CreateUserWithAuth crea un usuario en Firebase Authentication y luego lo guarda en Firestore
 func (s *UserService) CreateUserWithAuth(password string, user *models.User) error {
 	// Crear usuario en Firebase Authentication
 	ctx := context.Background()
@@ -58,8 +56,8 @@ func (s *UserService) CreateUserWithAuth(password string, user *models.User) err
 	// Asignar UID de Firebase al usuario
 	user.UID = authUser.UID
 
-	// Crear usuario en Firestore
-	if err := s.UserRepo.CreateUser(user); err != nil {
+	// Usar el método CreateUser para guardar el usuario en Firestore
+	if err := s.CreateUser(user); err != nil {
 		return err
 	}
 

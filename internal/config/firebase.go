@@ -1,4 +1,4 @@
-package auth
+package config
 
 import (
 	"context"
@@ -8,8 +8,6 @@ import (
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/auth"
 	"google.golang.org/api/option"
-
-	"github.com/Parchat/backend/internal/config"
 )
 
 // FirebaseApp representa la aplicación de Firebase
@@ -28,7 +26,7 @@ type FirestoreClient struct {
 }
 
 // NewFirebaseApp crea una nueva instancia de FirebaseApp
-func NewFirebaseApp(cfg *config.Config) (*FirebaseApp, error) {
+func NewFirebaseApp(cfg *Config) (*FirebaseApp, error) {
 	ctx := context.Background()
 
 	// Configurar opciones de Firebase

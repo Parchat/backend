@@ -3,17 +3,17 @@ package services
 import (
 	"context"
 
-	"github.com/Parchat/backend/internal/auth"
+	"github.com/Parchat/backend/internal/config"
 	"github.com/Parchat/backend/internal/models"
 )
 
 // AuthService maneja la lógica de negocio relacionada con usuarios
 type AuthService struct {
-	firebaseAuth *auth.FirebaseAuth
+	firebaseAuth *config.FirebaseAuth
 }
 
 // NewAuthService crea una nueva instancia de AuthService
-func NewAuthService(firebaseAuth *auth.FirebaseAuth) *AuthService {
+func NewAuthService(firebaseAuth *config.FirebaseAuth) *AuthService {
 	return &AuthService{
 		firebaseAuth: firebaseAuth,
 	}

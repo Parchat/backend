@@ -9,7 +9,6 @@ import (
 	"github.com/joho/godotenv"
 	"go.uber.org/fx"
 
-	"github.com/Parchat/backend/internal/auth"
 	"github.com/Parchat/backend/internal/config"
 	"github.com/Parchat/backend/internal/handlers"
 	"github.com/Parchat/backend/internal/middleware"
@@ -28,9 +27,9 @@ func main() {
 		// Proveedores
 		fx.Provide(
 			config.NewConfig,
-			auth.NewFirebaseApp,
-			auth.NewFirebaseAuth,
-			auth.NewFirestoreClient,
+			config.NewFirebaseApp,
+			config.NewFirebaseAuth,
+			config.NewFirestoreClient,
 			repositories.NewUserRepository,
 			services.NewAuthService,
 			services.NewUserService,
