@@ -15,7 +15,7 @@ import (
 func NewRouter(
 	authHandler *handlers.AuthHandler,
 	authMw *authMiddleware.AuthMiddleware,
-) http.Handler {
+) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Middlewares globales

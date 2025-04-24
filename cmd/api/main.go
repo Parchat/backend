@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/joho/godotenv"
 	"go.uber.org/fx"
 
 	"github.com/Parchat/backend/internal/config"
@@ -15,14 +14,26 @@ import (
 	"github.com/Parchat/backend/internal/repositories"
 	"github.com/Parchat/backend/internal/routes"
 	"github.com/Parchat/backend/internal/services"
+	"github.com/go-chi/chi/v5"
+
+	_ "github.com/Parchat/backend/docs"
 )
 
-func main() {
-	// Cargar variables de entorno
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using environment variables")
-	}
+// @title Parchat API
+// @version 1.0
+// @description This is Parchat API.
+// @termsOfService https://pachat.online/terms/
 
+// @contact.name Parchat Support
+// @contact.url https://pachat.online/support
+// @contact.email parchat.soporte@gmail.com
+
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host pachat.online
+// @BasePath /api/v1
+func main() {
 	app := fx.New(
 		// Proveedores
 		fx.Provide(
@@ -38,6 +49,7 @@ func main() {
 			middleware.NewAuthMiddleware,
 			routes.NewRouter,
 		),
+		config.SwaggerModule,
 		// Invocadores
 		fx.Invoke(registerHooks),
 	)
@@ -47,7 +59,7 @@ func main() {
 
 func registerHooks(
 	lifecycle fx.Lifecycle,
-	router http.Handler,
+	router *chi.Mux,
 	cfg *config.Config,
 ) {
 	server := &http.Server{

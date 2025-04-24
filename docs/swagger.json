@@ -1,0 +1,21 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is Parchat API.",
+        "title": "Parchat API",
+        "termsOfService": "https://pachat.online/terms/",
+        "contact": {
+            "name": "Parchat Support",
+            "url": "https://pachat.online/support",
+            "email": "parchat.soporte@gmail.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "pachat.online",
+    "basePath": "/api/v1/docs",
+    "paths": {}
+}

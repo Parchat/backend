@@ -1,0 +1,16 @@
+basePath: /api/v1/docs
+host: pachat.online
+info:
+  contact:
+    email: parchat.soporte@gmail.com
+    name: Parchat Support
+    url: https://pachat.online/support
+  description: This is Parchat API.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://pachat.online/terms/
+  title: Parchat API
+  version: "1.0"
+paths: {}
+swagger: "2.0"
