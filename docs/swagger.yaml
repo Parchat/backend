@@ -1,5 +1,37 @@
-basePath: /api/v1/docs
-host: pachat.online
+basePath: /
+definitions:
+  handlers.PayloadSignUp:
+    properties:
+      displayName:
+        type: string
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  models.User:
+    properties:
+      createdAt:
+        description: BlockedUsers []string  `json:"blockedUsers" firestore:"blockedUsers"`
+        type: string
+      displayName:
+        type: string
+      email:
+        type: string
+      isDeleted:
+        type: boolean
+      lastSeen:
+        type: string
+      photoUrl:
+        type: string
+      status:
+        type: string
+      uid:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+host: localhost:8080
 info:
   contact:
     email: parchat.soporte@gmail.com
@@ -12,5 +44,63 @@ info:
   termsOfService: https://pachat.online/terms/
   title: Parchat API
   version: "1.0"
-paths: {}
+paths:
+  /api/v1/auth/me:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve los datos del usuario autenticado basado en el ID del
+        contexto
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Datos del usuario actual
+          schema:
+            $ref: '#/definitions/models.User'
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtiene el usuario actual
+      tags:
+      - Auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      description: Crea un nuevo usuario en Firebase Authentication y lo guarda en
+        Firestore
+      parameters:
+      - description: Datos del usuario a registrar
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.PayloadSignUp'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Usuario creado exitosamente
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Solicitud inválida
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      summary: Registra un nuevo usuario
+      tags:
+      - Auth
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
