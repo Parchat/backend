@@ -56,7 +56,7 @@ ENVIRONMENT=development
 ## Ejecución
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 ## Endpoints
