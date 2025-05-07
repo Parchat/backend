@@ -1,0 +1,50 @@
+name: Deploy Backend to GCP VM
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types: [closed] # (mergeado)
+    branches: [develop]
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true # Solo si se hizo merge
+    name: 🚀 DEVELOP Deploy Go to GCP
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 👉 Build la imagen Docker
+      - name: Build Docker image
+        run: docker build -f Dockerfile.dev -t ${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }} .
+
+      # 👉 Log in to DockerHub
+      - name: DockerHub Login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # 👉 Push la imagen
+      - name: Push Docker image to DockerHub
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }}
+
+      # 👉 Add VM to known_hosts
+      - name: Add VM to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.GCP_VM_IP }} >> ~/.ssh/known_hosts
+
+      # 👉 Desplegar en la VM
+      - name: Deploy on GCP VM
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.GCP_VM_IP }}
+          username: ${{ secrets.GCP_VM_USER }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.WORK_DIR }}/
+            docker pull ${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }}
+            export DOCKER_IMAGE_BACKEND_DEV=${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }}
+            docker compose up -d backend-dev

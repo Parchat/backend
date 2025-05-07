@@ -1,0 +1,30 @@
+FROM golang:1.24-alpine AS builder
+
+WORKDIR /app
+
+# Copiar archivos de dependencias
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copiar el código fuente
+COPY . .
+
+# Compilar la aplicación
+RUN CGO_ENABLED=0 GOOS=linux go build -o /app/backend ./cmd/api
+
+# Imagen final
+FROM alpine:3.21
+
+WORKDIR /app
+
+# Install CA certificates for HTTPS
+RUN apk --no-cache add ca-certificates
+
+# Copiar el binario compilado
+COPY --from=builder /app/backend .
+
+# Exponer el puerto
+EXPOSE 8081
+
+# Ejecutar la aplicación
+CMD ["./backend"]

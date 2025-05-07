@@ -1,6 +1,6 @@
 services:
   backend:
-    #profiles: ["dev"]
+    profiles: ["dev"]
     build:
       context: .
       dockerfile: Dockerfile.dev
@@ -10,3 +10,14 @@ services:
       - .env
     volumes:
       - .:/app
+  backend-prod:
+    profiles: ["prod"]
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - .env
+    volumes:
+      - ./firebase-credentials.json:/app/firebase-credentials.json:ro
