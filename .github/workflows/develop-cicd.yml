@@ -1,26 +1,25 @@
-name: Deploy Backend to GCP VM
+name: Deploy Backend-Develop to GCP VM
 
 on:
-  push:
-    branches:
-      - develop
   pull_request:
-    types: [closed] # (mergeado)
+    types: [closed]
     branches: [develop]
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true # Solo si se hizo merge
-    name: 🚀 DEVELOP Deploy Go to GCP
+    if: github.event.pull_request.merged == true
+    name: 🚀🛠 Deploy DEVELOP Golang to GCP
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: develop
 
       # 👉 Build la imagen Docker
       - name: Build Docker image
-        run: docker build -f Dockerfile.dev -t ${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }} .
+        run: docker build -f Dockerfile.prod -t ${{ secrets.DOCKER_USERNAME }}/backend-dev:stage-${{ github.sha }} .
 
       # 👉 Log in to DockerHub
       - name: DockerHub Login
@@ -28,13 +27,24 @@ jobs:
 
       # 👉 Push la imagen
       - name: Push Docker image to DockerHub
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }}
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/backend-dev:stage-${{ github.sha }}
 
       # 👉 Add VM to known_hosts
       - name: Add VM to known_hosts
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan ${{ secrets.GCP_VM_IP }} >> ~/.ssh/known_hosts
+
+      - name: Actualizar o agregar imagen en .env
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: ${{ secrets.GCP_VM_IP }}
+          username: ${{ secrets.GCP_VM_USER }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            cd /home/proyectosdanils/
+            sed -i '/^DOCKER_IMAGE_BACKEND_DEV=/d' .env
+            echo "DOCKER_IMAGE_BACKEND_DEV=${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }}" >> .env
 
       # 👉 Desplegar en la VM
       - name: Deploy on GCP VM
@@ -44,7 +54,5 @@ jobs:
           username: ${{ secrets.GCP_VM_USER }}
           key: ${{ secrets.GCP_SSH_KEY }}
           script: |
-            cd /home/${{ secrets.WORK_DIR }}/
-            docker pull ${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }}
-            export DOCKER_IMAGE_BACKEND_DEV=${{ secrets.DOCKER_USERNAME }}/backend-dev:${{ github.sha }}
-            docker compose up -d backend-dev
+            cd /home/proyectosdanils/
+            docker compose up -d backend-dev --build
