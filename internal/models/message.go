@@ -1,0 +1,14 @@
+package models
+
+import "time"
+
+// Message representa un mensaje enviado por un usuario
+type Message struct {
+	ID        string    `json:"id" firestore:"id"`
+	Content   string    `json:"content" firestore:"content"`
+	UserID    string    `json:"userId" firestore:"userId"`
+	RoomID    string    `json:"roomId" firestore:"roomId"`
+	CreatedAt time.Time `json:"createdAt" firestore:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt" firestore:"updatedAt"`
+	IsDeleted bool      `json:"isDeleted" firestore:"isDeleted"`
+}
