@@ -11,6 +11,7 @@ import (
 	"github.com/Parchat/backend/internal/config"
 	"github.com/Parchat/backend/internal/handlers"
 	"github.com/Parchat/backend/internal/middleware"
+	"github.com/Parchat/backend/internal/pkg/websocket"
 	"github.com/Parchat/backend/internal/repositories"
 	"github.com/Parchat/backend/internal/routes"
 	"github.com/Parchat/backend/internal/services"
@@ -46,16 +47,27 @@ func main() {
 			config.NewFirebaseAuth,
 			config.NewFirestoreClient,
 			repositories.NewUserRepository,
+			repositories.NewRoomRepository,
+			repositories.NewDirectChatRepository,
+			repositories.NewMessageRepository,
 			services.NewAuthService,
 			services.NewUserService,
+			services.NewRoomService,
+			services.NewDirectChatService,
 			handlers.NewAuthHandler,
 			handlers.NewUserHandler,
+			handlers.NewChatHandler,
 			middleware.NewAuthMiddleware,
+
+			// Proveedores de WebSocket
+			websocket.NewHub,
+			handlers.NewWebSocketHandler,
+
 			routes.NewRouter,
 		),
 		config.SwaggerModule,
 		// Invocadores
-		fx.Invoke(registerHooks),
+		fx.Invoke(registerHooks, runWebSocketHub),
 	)
 
 	app.Run()
@@ -87,6 +99,21 @@ func registerHooks(
 		OnStop: func(ctx context.Context) error {
 			log.Println("Shutting down server...")
 			return server.Shutdown(ctx)
+		},
+	})
+}
+
+// runWebSocketHub inicia el hub de WebSocket
+func runWebSocketHub(lifecycle fx.Lifecycle, hub *websocket.Hub) {
+	lifecycle.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			go hub.Run()
+			log.Println("WebSocket hub is running")
+			return nil
+		},
+		OnStop: func(ctx context.Context) error {
+			log.Println("Stopping WebSocket hub...")
+			return nil
 		},
 	})
 }

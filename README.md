@@ -56,10 +56,12 @@ ENVIRONMENT=development
 ## Ejecución
 
 ```bash
-docker compose up
+docker compose --profile=dev up
 ```
 
 ## Endpoints
+
+Una vez iniciado el servidor puedes acceder a la documentación desde [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
 
 ### Públicos
 
@@ -84,6 +86,7 @@ Para añadir nuevas funcionalidades:
 
 1. Crea los modelos necesarios en `internal/models/`
 2. Implementa la lógica de negocio en `internal/services/`
-3. Crea los manejadores HTTP en `internal/handlers/`
-4. Registra las rutas en `internal/routes/router.go`
-5. Registra los proveedores en `cmd/api/main.go`
+3. Crea los repositorios en caso de ser necesarios en `internal/repositories/`
+4. Crea los manejadores HTTP en `internal/handlers/`
+5. Registra las rutas en `internal/routes/router.go`
+6. Registra los proveedores en `cmd/api/main.go`
