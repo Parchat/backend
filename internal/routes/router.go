@@ -46,9 +46,12 @@ func NewRouter(
 	r.Route("/api/v1", func(r chi.Router) {
 		// Rutas de usuario
 		r.Route("/auth", func(r chi.Router) {
-			// Aplicar middleware de autenticación
-			r.Use(authMw.VerifyToken)
-			r.Get("/me", authHandler.GetCurrentUser)
+			r.Post("/signup", authHandler.SignUpAndCreateUser) // Ruta para registrar y crear un nuevo usuario
+
+			r.Group(func(r chi.Router) {
+				r.Use(authMw.VerifyToken)                // Aplicar middleware de autenticación
+				r.Get("/me", authHandler.GetCurrentUser) // Ruta para obtener el usuario actual
+			})
 		})
 
 		// Rutas de chat (protegidas)

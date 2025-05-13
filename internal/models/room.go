@@ -17,3 +17,11 @@ type Room struct {
 	UpdatedAt   time.Time `json:"updatedAt" firestore:"updatedAt"`
 	IsDeleted   bool      `json:"isDeleted" firestore:"isDeleted"`
 }
+
+// CreateRoomRequest represents the request body for creating a new chat room
+type CreateRoomRequest struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	IsPrivate   bool     `json:"isPrivate,omitempty"`
+	UserIDs     []string `json:"userIds,omitempty"` // IDs of users to be added to the room
+}

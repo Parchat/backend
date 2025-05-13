@@ -20,24 +20,23 @@ import (
 	_ "github.com/Parchat/backend/docs"
 )
 
-// @title Parchat API
-// @version 1.0
-// @description This is Parchat API.
-// @termsOfService https://pachat.online/terms/
+// @title			Parchat API
+// @version		1.0
+// @description	This is Parchat API.
+// @termsOfService	https://pachat.online/terms/
 
-// @contact.name Parchat Support
-// @contact.url https://pachat.online/support
-// @contact.email parchat.soporte@gmail.com
+// @contact.name	Parchat Support
+// @contact.url	https://pachat.online/support
+// @contact.email	parchat.soporte@gmail.com
 
-// @license.name Apache 2.0
-// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @license.name	Apache 2.0
+// @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host localhost:8080
-// @BasePath /
+// @BasePath	/
 
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	app := fx.New(
 		// Proveedores

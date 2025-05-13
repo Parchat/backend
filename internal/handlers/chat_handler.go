@@ -25,6 +25,19 @@ func NewChatHandler(roomService *services.RoomService, directChatService *servic
 }
 
 // CreateRoom crea una nueva sala de chat
+//
+//	@Summary		Crea una nueva sala de chat
+//	@Description	Crea una nueva sala de chat con el usuario actual como propietario
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			room	body		models.CreateRoomRequest	true	"Detalles de la sala"
+//	@Success		201		{object}	models.Room					"Sala creada exitosamente"
+//	@Failure		400		{string}	string						"Solicitud inválida"
+//	@Failure		401		{string}	string						"No autorizado"
+//	@Failure		500		{string}	string						"Error interno del servidor"
+//	@Router			/api/v1/chat/rooms [post]
 func (h *ChatHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	var room models.Room
 	if err := json.NewDecoder(r.Body).Decode(&room); err != nil {
@@ -52,6 +65,19 @@ func (h *ChatHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetRoom obtiene una sala de chat por ID
+//
+//	@Summary		Obtiene una sala por ID
+//	@Description	Devuelve los detalles de una sala específica
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			roomId	path		string		true	"ID de la sala"
+//	@Success		200		{object}	models.Room	"Detalles de la sala"
+//	@Failure		401		{string}	string		"No autorizado"
+//	@Failure		404		{string}	string		"Sala no encontrada"
+//	@Failure		500		{string}	string		"Error interno del servidor"
+//	@Router			/api/v1/chat/rooms/{roomId} [get]
 func (h *ChatHandler) GetRoom(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
 
@@ -65,6 +91,17 @@ func (h *ChatHandler) GetRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserRooms obtiene todas las salas a las que pertenece un usuario
+//
+//	@Summary		Obtiene las salas del usuario
+//	@Description	Devuelve todas las salas a las que pertenece el usuario autenticado
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		models.Room	"Lista de salas"
+//	@Failure		401	{string}	string		"No autorizado"
+//	@Failure		500	{string}	string		"Error interno del servidor"
+//	@Router			/api/v1/chat/rooms [get]
 func (h *ChatHandler) GetUserRooms(w http.ResponseWriter, r *http.Request) {
 	// Obtener el ID del usuario del contexto
 	userID, ok := r.Context().Value("userID").(string)
@@ -83,6 +120,21 @@ func (h *ChatHandler) GetUserRooms(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetRoomMessages obtiene los mensajes de una sala
+//
+//	@Summary		Obtiene mensajes de una sala
+//	@Description	Devuelve los mensajes de una sala específica
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			roomId	path		string			true	"ID de la sala"
+//	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
+//	@Param			before	query		string			false	"Timestamp para obtener mensajes anteriores"
+//	@Success		200		{array}		models.Message	"Lista de mensajes de la sala"
+//	@Failure		401		{string}	string			"No autorizado"
+//	@Failure		404		{string}	string			"Sala no encontrada"
+//	@Failure		500		{string}	string			"Error interno del servidor"
+//	@Router			/api/v1/chat/rooms/{roomId}/messages [get]
 func (h *ChatHandler) GetRoomMessages(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
 
@@ -106,6 +158,19 @@ func (h *ChatHandler) GetRoomMessages(w http.ResponseWriter, r *http.Request) {
 }
 
 // CreateDirectChat crea o encuentra un chat directo entre dos usuarios
+//
+//	@Summary		Crea un chat directo
+//	@Description	Crea o encuentra un chat directo entre el usuario autenticado y otro usuario
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		models.CreateDirectChatRequest	true	"ID del otro usuario"
+//	@Success		201		{object}	models.DirectChat				"Chat directo creado o encontrado"
+//	@Failure		400		{string}	string							"Solicitud inválida"
+//	@Failure		401		{string}	string							"No autorizado"
+//	@Failure		500		{string}	string							"Error interno del servidor"
+//	@Router			/api/v1/chat/direct [post]
 func (h *ChatHandler) CreateDirectChat(w http.ResponseWriter, r *http.Request) {
 	// Obtener el ID del usuario del contexto
 	userID, ok := r.Context().Value("userID").(string)
@@ -115,9 +180,7 @@ func (h *ChatHandler) CreateDirectChat(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Obtener el ID del otro usuario
-	var requestData struct {
-		OtherUserID string `json:"otherUserId"`
-	}
+	var requestData models.CreateDirectChatRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
@@ -140,6 +203,17 @@ func (h *ChatHandler) CreateDirectChat(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetUserDirectChats obtiene todos los chats directos del usuario
+//
+//	@Summary		Obtiene chats directos
+//	@Description	Devuelve todos los chats directos del usuario autenticado
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		models.DirectChat	"Lista de chats directos"
+//	@Failure		401	{string}	string				"No autorizado"
+//	@Failure		500	{string}	string				"Error interno del servidor"
+//	@Router			/api/v1/chat/direct [get]
 func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request) {
 	// Obtener el ID del usuario del contexto
 	userID, ok := r.Context().Value("userID").(string)
@@ -158,6 +232,21 @@ func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request)
 }
 
 // GetDirectChatMessages obtiene los mensajes de un chat directo
+//
+//	@Summary		Obtiene mensajes de un chat directo
+//	@Description	Devuelve los mensajes de un chat directo específico
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			chatId	path		string			true	"ID del chat directo"
+//	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
+//	@Param			before	query		string			false	"Timestamp para obtener mensajes anteriores"
+//	@Success		200		{array}		models.Message	"Lista de mensajes del chat directo"
+//	@Failure		401		{string}	string			"No autorizado"
+//	@Failure		404		{string}	string			"Chat no encontrado"
+//	@Failure		500		{string}	string			"Error interno del servidor"
+//	@Router			/api/v1/chat/direct/{chatId}/messages [get]
 func (h *ChatHandler) GetDirectChatMessages(w http.ResponseWriter, r *http.Request) {
 	chatID := chi.URLParam(r, "chatId")
 

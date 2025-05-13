@@ -104,6 +104,19 @@ func (c *Client) ReadPump() {
 				continue
 			}
 
+			// Verificar si el usuario es parte de la sala antes de enviar el mensaje
+			if !c.hub.roomRepo.CanJoinRoom(chatMsg.RoomID, c.userID) {
+				errMsg := "No permission to send messages to this room"
+				errorPayload, _ := json.Marshal(errMsg)
+				c.send <- WebSocketMessage{
+					Type:      MessageTypeError,
+					Payload:   errorPayload,
+					Timestamp: time.Now(),
+				}
+				log.Printf("User %s attempted to send message to room %s without permission", c.userID, chatMsg.RoomID)
+				continue
+			}
+
 			// Asignar ID y timestamps si no existen
 			if chatMsg.ID == "" {
 				chatMsg.ID = uuid.New().String()
@@ -145,6 +158,19 @@ func (c *Client) ReadPump() {
 			var chatMsg models.Message
 			if err := json.Unmarshal(wsMessage.Payload, &chatMsg); err != nil {
 				log.Printf("Error unmarshaling direct chat message: %v", err)
+				continue
+			}
+
+			// Verificar si el usuario es parte del chat directo antes de enviar el mensaje
+			if !c.hub.directChatRepo.IsUserInDirectChat(chatMsg.RoomID, c.userID) {
+				errMsg := "Not a member of this direct chat"
+				errorPayload, _ := json.Marshal(errMsg)
+				c.send <- WebSocketMessage{
+					Type:      MessageTypeError,
+					Payload:   errorPayload,
+					Timestamp: time.Now(),
+				}
+				log.Printf("User %s attempted to send message to direct chat %s without being a member", c.userID, chatMsg.RoomID)
 				continue
 			}
 
