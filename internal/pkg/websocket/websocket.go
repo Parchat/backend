@@ -105,7 +105,7 @@ func (c *Client) ReadPump() {
 			}
 
 			// Verificar si el usuario es parte de la sala antes de enviar el mensaje
-			if !c.hub.roomRepo.CanJoinRoom(chatMsg.RoomID, c.userID) {
+			if !c.hub.roomRepo.CanTalkInRoomWebSocket(chatMsg.RoomID, c.userID) {
 				errMsg := "No permission to send messages to this room"
 				errorPayload, _ := json.Marshal(errMsg)
 				c.send <- WebSocketMessage{
@@ -219,7 +219,7 @@ func (c *Client) ReadPump() {
 			}
 
 			// Verificar si el usuario tiene permiso para unirse a la sala
-			if c.hub.roomRepo.CanJoinRoom(roomID, c.userID) {
+			if c.hub.roomRepo.CanJoinRoomWebSocket(roomID, c.userID) {
 				c.rooms[roomID] = true
 				log.Printf("User %s joined room %s", c.userID, roomID)
 			} else {

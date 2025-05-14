@@ -62,15 +62,17 @@ func NewRouter(
 			// Rutas de salas
 			r.Route("/rooms", func(r chi.Router) {
 				r.Post("/", chatHandler.CreateRoom)
-				r.Get("/", chatHandler.GetUserRooms)
+				r.Get("/me", chatHandler.GetUserRooms)
+				r.Get("/", chatHandler.GetAllRooms)
 				r.Get("/{roomId}", chatHandler.GetRoom)
 				r.Get("/{roomId}/messages", chatHandler.GetRoomMessages)
+				r.Post("/{roomId}/join", chatHandler.JoinRoom)
 			})
 
 			// Rutas de chats directos
 			r.Route("/direct", func(r chi.Router) {
-				r.Post("/", chatHandler.CreateDirectChat)
-				r.Get("/", chatHandler.GetUserDirectChats)
+				r.Post("/{otherUserId}", chatHandler.CreateDirectChat)
+				r.Get("/me", chatHandler.GetUserDirectChats)
 				r.Get("/{chatId}/messages", chatHandler.GetDirectChatMessages)
 			})
 

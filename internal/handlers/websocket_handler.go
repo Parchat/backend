@@ -32,6 +32,7 @@ func NewWebSocketHandler(hub *pws.Hub, firebaseAuth *config.FirebaseAuth) *WebSo
 }
 
 // HandleWebSocket maneja las conexiones WebSocket
+//
 //	@Summary		Conexión WebSocket para chat en tiempo real
 //	@Description	Establece una conexión WebSocket para mensajería en tiempo real
 //	@Tags			Chat
@@ -40,7 +41,7 @@ func NewWebSocketHandler(hub *pws.Hub, firebaseAuth *config.FirebaseAuth) *WebSo
 //	@Security		BearerAuth
 //	@Success		101	{string}	string	"Switching Protocols a WebSocket"
 //	@Failure		401	{string}	string	"No autorizado"
-//	@Router			/api/v1/chat/ws [get]
+//	@Router			/chat/ws [get]
 func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	// Verificar el token desde el contexto (añadido por el middleware de autenticación)
 	userID, ok := r.Context().Value("userID").(string)

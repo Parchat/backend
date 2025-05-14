@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/Parchat/backend/internal/models"
 	"github.com/Parchat/backend/internal/repositories"
 	"github.com/google/uuid"
@@ -52,6 +54,23 @@ func (s *RoomService) GetUserRooms(userID string) ([]models.Room, error) {
 // GetRoomMessages obtiene los mensajes de una sala
 func (s *RoomService) GetRoomMessages(roomID string, limit int) ([]models.Message, error) {
 	return s.MessageRepo.GetRoomMessages(roomID, limit)
+}
+
+// GetAllRooms obtiene todas las salas ordenadas por fecha de actualización
+func (s *RoomService) GetAllRooms() ([]models.Room, error) {
+	return s.RoomRepo.GetAllRooms()
+}
+
+// JoinRoom permite a un usuario unirse a una sala si tiene permiso
+func (s *RoomService) JoinRoom(roomID string, userID string) error {
+	// Verificar si el usuario puede unirse a la sala
+	canJoin := s.RoomRepo.CanJoinRoomWebSocket(roomID, userID)
+	if !canJoin {
+		return fmt.Errorf("user is not allowed to join this room")
+	}
+
+	// Añadir usuario a la sala
+	return s.RoomRepo.AddMemberToRoom(roomID, userID)
 }
 
 // Helper para verificar si un slice contiene un valor

@@ -37,7 +37,7 @@ func NewChatHandler(roomService *services.RoomService, directChatService *servic
 //	@Failure		400		{string}	string						"Solicitud inválida"
 //	@Failure		401		{string}	string						"No autorizado"
 //	@Failure		500		{string}	string						"Error interno del servidor"
-//	@Router			/api/v1/chat/rooms [post]
+//	@Router			/chat/rooms [post]
 func (h *ChatHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	var room models.Room
 	if err := json.NewDecoder(r.Body).Decode(&room); err != nil {
@@ -77,7 +77,7 @@ func (h *ChatHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401		{string}	string		"No autorizado"
 //	@Failure		404		{string}	string		"Sala no encontrada"
 //	@Failure		500		{string}	string		"Error interno del servidor"
-//	@Router			/api/v1/chat/rooms/{roomId} [get]
+//	@Router			/chat/rooms/{roomId} [get]
 func (h *ChatHandler) GetRoom(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
 
@@ -101,7 +101,7 @@ func (h *ChatHandler) GetRoom(w http.ResponseWriter, r *http.Request) {
 //	@Success		200	{array}		models.Room	"Lista de salas"
 //	@Failure		401	{string}	string		"No autorizado"
 //	@Failure		500	{string}	string		"Error interno del servidor"
-//	@Router			/api/v1/chat/rooms [get]
+//	@Router			/chat/rooms/me [get]
 func (h *ChatHandler) GetUserRooms(w http.ResponseWriter, r *http.Request) {
 	// Obtener el ID del usuario del contexto
 	userID, ok := r.Context().Value("userID").(string)
@@ -134,7 +134,7 @@ func (h *ChatHandler) GetUserRooms(w http.ResponseWriter, r *http.Request) {
 //	@Failure		401		{string}	string			"No autorizado"
 //	@Failure		404		{string}	string			"Sala no encontrada"
 //	@Failure		500		{string}	string			"Error interno del servidor"
-//	@Router			/api/v1/chat/rooms/{roomId}/messages [get]
+//	@Router			/chat/rooms/{roomId}/messages [get]
 func (h *ChatHandler) GetRoomMessages(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
 
@@ -165,12 +165,12 @@ func (h *ChatHandler) GetRoomMessages(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			request	body		models.CreateDirectChatRequest	true	"ID del otro usuario"
-//	@Success		201		{object}	models.DirectChat				"Chat directo creado o encontrado"
-//	@Failure		400		{string}	string							"Solicitud inválida"
-//	@Failure		401		{string}	string							"No autorizado"
-//	@Failure		500		{string}	string							"Error interno del servidor"
-//	@Router			/api/v1/chat/direct [post]
+//	@Param			otherUserId	path		string				true	"ID del otro usuario"
+//	@Success		201			{object}	models.DirectChat	"Chat directo creado o encontrado"
+//	@Failure		400			{string}	string				"Solicitud inválida"
+//	@Failure		401			{string}	string				"No autorizado"
+//	@Failure		500			{string}	string				"Error interno del servidor"
+//	@Router			/chat/direct/{otherUserId} [post]
 func (h *ChatHandler) CreateDirectChat(w http.ResponseWriter, r *http.Request) {
 	// Obtener el ID del usuario del contexto
 	userID, ok := r.Context().Value("userID").(string)
@@ -179,20 +179,14 @@ func (h *ChatHandler) CreateDirectChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Obtener el ID del otro usuario
-	var requestData models.CreateDirectChatRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&requestData); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-
-	if requestData.OtherUserID == "" {
+	// Obtener el ID del otro usuario desde el parámetro de la URL
+	otherUserID := chi.URLParam(r, "otherUserId")
+	if otherUserID == "" {
 		http.Error(w, "Other user ID is required", http.StatusBadRequest)
 		return
 	}
 
-	chat, err := h.DirectChatService.FindOrCreateDirectChat(userID, requestData.OtherUserID)
+	chat, err := h.DirectChatService.FindOrCreateDirectChat(userID, otherUserID)
 	if err != nil {
 		http.Error(w, "Error creating direct chat: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -213,7 +207,7 @@ func (h *ChatHandler) CreateDirectChat(w http.ResponseWriter, r *http.Request) {
 //	@Success		200	{array}		models.DirectChat	"Lista de chats directos"
 //	@Failure		401	{string}	string				"No autorizado"
 //	@Failure		500	{string}	string				"Error interno del servidor"
-//	@Router			/api/v1/chat/direct [get]
+//	@Router			/chat/direct/me [get]
 func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request) {
 	// Obtener el ID del usuario del contexto
 	userID, ok := r.Context().Value("userID").(string)
@@ -246,7 +240,7 @@ func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request)
 //	@Failure		401		{string}	string			"No autorizado"
 //	@Failure		404		{string}	string			"Chat no encontrado"
 //	@Failure		500		{string}	string			"Error interno del servidor"
-//	@Router			/api/v1/chat/direct/{chatId}/messages [get]
+//	@Router			/chat/direct/{chatId}/messages [get]
 func (h *ChatHandler) GetDirectChatMessages(w http.ResponseWriter, r *http.Request) {
 	chatID := chi.URLParam(r, "chatId")
 
@@ -267,4 +261,74 @@ func (h *ChatHandler) GetDirectChatMessages(w http.ResponseWriter, r *http.Reque
 	}
 
 	json.NewEncoder(w).Encode(messages)
+}
+
+// GetAllRooms obtiene todas las salas ordenadas por updatedAt
+//
+//	@Summary		Obtiene todas las salas
+//	@Description	Devuelve todas las salas ordenadas por fecha de actualización descendente
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		models.Room	"Lista de salas"
+//	@Failure		401	{string}	string		"No autorizado"
+//	@Failure		500	{string}	string		"Error interno del servidor"
+//	@Router			/chat/rooms [get]
+func (h *ChatHandler) GetAllRooms(w http.ResponseWriter, r *http.Request) {
+	rooms, err := h.RoomService.GetAllRooms()
+	if err != nil {
+		http.Error(w, "Error getting rooms: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(rooms)
+}
+
+// JoinRoom permite a un usuario unirse a una sala
+//
+//	@Summary		Unirse a una sala
+//	@Description	Permite al usuario autenticado unirse a una sala específica
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			roomId	path		string	true	"ID de la sala"
+//	@Success		200		{string}	string	"Usuario unido exitosamente"
+//	@Failure		401		{string}	string	"No autorizado"
+//	@Failure		403		{string}	string	"No permitido unirse a esta sala"
+//	@Failure		404		{string}	string	"Sala no encontrada"
+//	@Failure		409		{string}	string	"Usuario ya es miembro de la sala"
+//	@Failure		500		{string}	string	"Error interno del servidor"
+//	@Router			/chat/rooms/{roomId}/join [post]
+func (h *ChatHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
+	roomID := chi.URLParam(r, "roomId")
+
+	// Obtener el ID del usuario del contexto
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	err := h.RoomService.JoinRoom(roomID, userID)
+	if err != nil {
+		if err.Error() == "user is not allowed to join this room" {
+			http.Error(w, "Error joining room: "+err.Error(), http.StatusForbidden)
+			return
+		}
+		if err.Error() == "user is already a member of the room" {
+			http.Error(w, "Error joining room: "+err.Error(), http.StatusConflict)
+			return
+		}
+		http.Error(w, "Error joining room: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]string{
+		"message": "Successfully joined the room",
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }

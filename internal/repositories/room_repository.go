@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cloud.google.com/go/firestore"
@@ -76,18 +77,8 @@ func (r *RoomRepository) UpdateLastMessage(roomID string, message *models.Messag
 	return err
 }
 
-// CanJoinRoom verifica si un usuario puede unirse a una sala
-func (r *RoomRepository) CanJoinRoom(roomID string, userID string) bool {
-	room, err := r.GetRoom(roomID)
-	if err != nil {
-		return false
-	}
-
-	// Si la sala no es privada, cualquiera puede unirse
-	if !room.IsPrivate {
-		return true
-	}
-
+// HasRoomAccess verifica si un usuario tiene acceso a una sala
+func (r *RoomRepository) HasRoomAccess(room *models.Room, userID string) bool {
 	// Verificar si el usuario es miembro
 	for _, member := range room.Members {
 		if member == userID {
@@ -104,6 +95,31 @@ func (r *RoomRepository) CanJoinRoom(roomID string, userID string) bool {
 
 	// Verificar si el usuario es el propietario
 	return room.OwnerID == userID
+}
+
+// CanJoinRoomWebSocket verifica si un usuario puede conectarse a una sala por WebSocket
+func (r *RoomRepository) CanJoinRoomWebSocket(roomID string, userID string) bool {
+	room, err := r.GetRoom(roomID)
+	if err != nil {
+		return false
+	}
+
+	// Si la sala no es privada, cualquiera puede unirse
+	if !room.IsPrivate {
+		return true
+	}
+
+	return r.HasRoomAccess(room, userID)
+}
+
+// CanTalkInRoom verifica si un usuario puede hablar en una sala
+func (r *RoomRepository) CanTalkInRoomWebSocket(roomID string, userID string) bool {
+	room, err := r.GetRoom(roomID)
+	if err != nil {
+		return false
+	}
+
+	return r.HasRoomAccess(room, userID)
 }
 
 // GetUserRooms obtiene todas las salas a las que pertenece un usuario
@@ -182,4 +198,61 @@ func (r *RoomRepository) GetUserRooms(userID string) ([]models.Room, error) {
 	}
 
 	return rooms, nil
+}
+
+// GetAllRooms obtiene todas las salas ordenadas por fecha de actualización
+func (r *RoomRepository) GetAllRooms() ([]models.Room, error) {
+	ctx := context.Background()
+
+	// Consultar todas las salas ordenadas por updatedAt descendente
+	query := r.FirestoreClient.Client.Collection("rooms").
+		//Where("isDeleted", "==", false).
+		OrderBy("updatedAt", firestore.Desc)
+
+	docs, err := query.Documents(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	var rooms []models.Room
+	for _, doc := range docs {
+		var room models.Room
+		if err := doc.DataTo(&room); err != nil {
+			return nil, err
+		}
+		rooms = append(rooms, room)
+	}
+
+	return rooms, nil
+}
+
+// AddMemberToRoom añade un usuario como miembro de una sala
+func (r *RoomRepository) AddMemberToRoom(roomID string, userID string) error {
+	ctx := context.Background()
+
+	// Obtener la sala
+	room, err := r.GetRoom(roomID)
+	if err != nil {
+		return err
+	}
+
+	// Verificar si el usuario es miembro
+	for _, member := range room.Members {
+		if member == userID {
+			return fmt.Errorf("user is already a member of the room")
+		}
+	}
+
+	// Si la sala es privada, no puede unirse
+	if room.IsPrivate {
+		return fmt.Errorf("room is private, user cannot join")
+	}
+
+	// Añadir el usuario como miembro y actualizar la fecha de modificación
+	_, err = r.FirestoreClient.Client.Collection("rooms").Doc(roomID).Update(ctx, []firestore.Update{
+		{Path: "members", Value: firestore.ArrayUnion(userID)},
+		{Path: "updatedAt", Value: time.Now()},
+	})
+
+	return err
 }

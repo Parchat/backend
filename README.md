@@ -94,8 +94,8 @@ Una vez iniciado el servidor puedes acceder a la documentación desde [http://lo
 - `GET /api/v1/chat/rooms/{roomId}/messages`: Obtiene mensajes de una sala específica
 
 #### Chats Directos
-- `POST /api/v1/chat/direct`: Crea un chat directo entre dos usuarios
-- `GET /api/v1/chat/direct`: Obtiene todos los chats directos del usuario actual
+- `POST /api/v1/chat/direct/{otherUserId}`: Crea un chat directo entre el usuario autenticado y otro usuario
+- `GET /api/v1/chat/direct/me`: Obtiene todos los chats directos del usuario actual
 - `GET /api/v1/chat/direct/{chatId}/messages`: Obtiene mensajes de un chat directo específico
 
 #### WebSocket
@@ -118,17 +118,12 @@ Primero, debes autenticarte para obtener un token JWT:
 
 Una vez que tengas el token, puedes crear un Direct Chat:
 
-1. Configura una solicitud POST a: `http://localhost:8080/api/v1/chat/direct`
+1. Configura una solicitud POST a: `http://localhost:8080/api/v1/chat/direct/{ID_DEL_OTRO_USUARIO}`
+   - Reemplaza `{ID_DEL_OTRO_USUARIO}` con el ID real del usuario con el que deseas chatear
 2. En la pestaña "Headers", añade:
    - `Content-Type: application/json`
    - `Authorization: Bearer TU_TOKEN_JWT`
-3. En la pestaña "Body", selecciona "raw" y formato JSON:
-   ```json
-   {
-     "otherUserId": "ID_DEL_OTRO_USUARIO"
-   }
-   ```
-4. Envía la solicitud
+3. Envía la solicitud
 
 La respuesta será un JSON con los detalles del chat directo creado (o existente si ya había uno):
 
