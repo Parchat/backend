@@ -3,5 +3,6 @@
 .git
 .gitignore
 firebase-credentials.json
+vendor/
 tmp/
 README.md
