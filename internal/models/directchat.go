@@ -11,8 +11,3 @@ type DirectChat struct {
 	UpdatedAt   time.Time `json:"updatedAt" firestore:"updatedAt"`
 	IsDeleted   bool      `json:"isDeleted" firestore:"isDeleted"`
 }
-
-// CreateDirectChatRequest represents the request body for creating a direct chat
-type CreateDirectChatRequest struct {
-	OtherUserID string `json:"otherUserId" example:"user123"`
-}

@@ -1,4 +1,4 @@
-basePath: /
+basePath: /api/v1/
 definitions:
   handlers.PayloadSignUp:
     properties:
@@ -7,12 +7,6 @@ definitions:
       email:
         type: string
       password:
-        type: string
-    type: object
-  models.CreateDirectChatRequest:
-    properties:
-      otherUserId:
-        example: user123
         type: string
     type: object
   models.CreateRoomRequest:
@@ -129,7 +123,7 @@ info:
   title: Parchat API
   version: "1.0"
 paths:
-  /api/v1/auth/me:
+  /auth/me:
     get:
       consumes:
       - application/json
@@ -151,7 +145,7 @@ paths:
       summary: Obtiene el usuario actual
       tags:
       - Auth
-  /api/v1/auth/signup:
+  /auth/signup:
     post:
       consumes:
       - application/json
@@ -182,70 +176,7 @@ paths:
       summary: Registra un nuevo usuario
       tags:
       - Auth
-  /api/v1/chat/direct:
-    get:
-      consumes:
-      - application/json
-      description: Devuelve todos los chats directos del usuario autenticado
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Lista de chats directos
-          schema:
-            items:
-              $ref: '#/definitions/models.DirectChat'
-            type: array
-        "401":
-          description: No autorizado
-          schema:
-            type: string
-        "500":
-          description: Error interno del servidor
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Obtiene chats directos
-      tags:
-      - Chat
-    post:
-      consumes:
-      - application/json
-      description: Crea o encuentra un chat directo entre el usuario autenticado y
-        otro usuario
-      parameters:
-      - description: ID del otro usuario
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.CreateDirectChatRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Chat directo creado o encontrado
-          schema:
-            $ref: '#/definitions/models.DirectChat'
-        "400":
-          description: Solicitud inválida
-          schema:
-            type: string
-        "401":
-          description: No autorizado
-          schema:
-            type: string
-        "500":
-          description: Error interno del servidor
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Crea un chat directo
-      tags:
-      - Chat
-  /api/v1/chat/direct/{chatId}/messages:
+  /chat/direct/{chatId}/messages:
     get:
       consumes:
       - application/json
@@ -291,11 +222,74 @@ paths:
       summary: Obtiene mensajes de un chat directo
       tags:
       - Chat
-  /api/v1/chat/rooms:
+  /chat/direct/{otherUserId}:
+    post:
+      consumes:
+      - application/json
+      description: Crea o encuentra un chat directo entre el usuario autenticado y
+        otro usuario
+      parameters:
+      - description: ID del otro usuario
+        in: path
+        name: otherUserId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Chat directo creado o encontrado
+          schema:
+            $ref: '#/definitions/models.DirectChat'
+        "400":
+          description: Solicitud inválida
+          schema:
+            type: string
+        "401":
+          description: No autorizado
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Crea un chat directo
+      tags:
+      - Chat
+  /chat/direct/me:
     get:
       consumes:
       - application/json
-      description: Devuelve todas las salas a las que pertenece el usuario autenticado
+      description: Devuelve todos los chats directos del usuario autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de chats directos
+          schema:
+            items:
+              $ref: '#/definitions/models.DirectChat'
+            type: array
+        "401":
+          description: No autorizado
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtiene chats directos
+      tags:
+      - Chat
+  /chat/rooms:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve todas las salas ordenadas por fecha de actualización descendente
       produces:
       - application/json
       responses:
@@ -315,7 +309,7 @@ paths:
             type: string
       security:
       - BearerAuth: []
-      summary: Obtiene las salas del usuario
+      summary: Obtiene todas las salas
       tags:
       - Chat
     post:
@@ -353,7 +347,7 @@ paths:
       summary: Crea una nueva sala de chat
       tags:
       - Chat
-  /api/v1/chat/rooms/{roomId}:
+  /chat/rooms/{roomId}:
     get:
       consumes:
       - application/json
@@ -388,7 +382,50 @@ paths:
       summary: Obtiene una sala por ID
       tags:
       - Chat
-  /api/v1/chat/rooms/{roomId}/messages:
+  /chat/rooms/{roomId}/join:
+    post:
+      consumes:
+      - application/json
+      description: Permite al usuario autenticado unirse a una sala específica
+      parameters:
+      - description: ID de la sala
+        in: path
+        name: roomId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuario unido exitosamente
+          schema:
+            type: string
+        "401":
+          description: No autorizado
+          schema:
+            type: string
+        "403":
+          description: No permitido unirse a esta sala
+          schema:
+            type: string
+        "404":
+          description: Sala no encontrada
+          schema:
+            type: string
+        "409":
+          description: Usuario ya es miembro de la sala
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Unirse a una sala
+      tags:
+      - Chat
+  /chat/rooms/{roomId}/messages:
     get:
       consumes:
       - application/json
@@ -434,7 +471,34 @@ paths:
       summary: Obtiene mensajes de una sala
       tags:
       - Chat
-  /api/v1/chat/ws:
+  /chat/rooms/me:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve todas las salas a las que pertenece el usuario autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de salas
+          schema:
+            items:
+              $ref: '#/definitions/models.Room'
+            type: array
+        "401":
+          description: No autorizado
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtiene las salas del usuario
+      tags:
+      - Chat
+  /chat/ws:
     get:
       consumes:
       - application/json

@@ -24,7 +24,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/auth/me": {
+        "/auth/me": {
             "get": {
                 "security": [
                     {
@@ -58,7 +58,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/auth/signup": {
+        "/auth/signup": {
             "post": {
                 "description": "Crea un nuevo usuario en Firebase Authentication y lo guarda en Firestore",
                 "consumes": [
@@ -104,7 +104,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/chat/direct": {
+        "/chat/direct/me": {
             "get": {
                 "security": [
                     {
@@ -145,64 +145,9 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Crea o encuentra un chat directo entre el usuario autenticado y otro usuario",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chat"
-                ],
-                "summary": "Crea un chat directo",
-                "parameters": [
-                    {
-                        "description": "ID del otro usuario",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.CreateDirectChatRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Chat directo creado o encontrado",
-                        "schema": {
-                            "$ref": "#/definitions/models.DirectChat"
-                        }
-                    },
-                    "400": {
-                        "description": "Solicitud inválida",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
             }
         },
-        "/api/v1/chat/direct/{chatId}/messages": {
+        "/chat/direct/{chatId}/messages": {
             "get": {
                 "security": [
                     {
@@ -273,14 +218,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/chat/rooms": {
-            "get": {
+        "/chat/direct/{otherUserId}": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Devuelve todas las salas a las que pertenece el usuario autenticado",
+                "description": "Crea o encuentra un chat directo entre el usuario autenticado y otro usuario",
                 "consumes": [
                     "application/json"
                 ],
@@ -290,7 +235,62 @@ const docTemplate = `{
                 "tags": [
                     "Chat"
                 ],
-                "summary": "Obtiene las salas del usuario",
+                "summary": "Crea un chat directo",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del otro usuario",
+                        "name": "otherUserId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Chat directo creado o encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/models.DirectChat"
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/rooms": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devuelve todas las salas ordenadas por fecha de actualización descendente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Obtiene todas las salas",
                 "responses": {
                     "200": {
                         "description": "Lista de salas",
@@ -371,7 +371,50 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/chat/rooms/{roomId}": {
+        "/chat/rooms/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devuelve todas las salas a las que pertenece el usuario autenticado",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Obtiene las salas del usuario",
+                "responses": {
+                    "200": {
+                        "description": "Lista de salas",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Room"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/rooms/{roomId}": {
             "get": {
                 "security": [
                     {
@@ -426,7 +469,74 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/chat/rooms/{roomId}/messages": {
+        "/chat/rooms/{roomId}/join": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Permite al usuario autenticado unirse a una sala específica",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Unirse a una sala",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID de la sala",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Usuario unido exitosamente",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "No permitido unirse a esta sala",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Sala no encontrada",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "409": {
+                        "description": "Usuario ya es miembro de la sala",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/rooms/{roomId}/messages": {
             "get": {
                 "security": [
                     {
@@ -497,7 +607,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/chat/ws": {
+        "/chat/ws": {
             "get": {
                 "security": [
                     {
@@ -544,15 +654,6 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
-                }
-            }
-        },
-        "models.CreateDirectChatRequest": {
-            "type": "object",
-            "properties": {
-                "otherUserId": {
-                    "type": "string",
-                    "example": "user123"
                 }
             }
         },
@@ -723,7 +824,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
-	BasePath:         "/",
+	BasePath:         "/api/v1/",
 	Schemes:          []string{},
 	Title:            "Parchat API",
 	Description:      "This is Parchat API.",
