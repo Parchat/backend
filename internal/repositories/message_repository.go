@@ -63,7 +63,7 @@ func (r *MessageRepository) GetRoomMessages(roomID string, limit int) ([]models.
 	messagesRef := r.FirestoreClient.Client.
 		Collection("rooms").Doc(roomID).
 		Collection("messages").
-		OrderBy("createdAt", firestore.Desc).
+		OrderBy("createdAt", firestore.Asc).
 		Limit(limit)
 
 	docs, err := messagesRef.Documents(ctx).GetAll()
@@ -91,7 +91,7 @@ func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int
 	messagesRef := r.FirestoreClient.Client.
 		Collection("directChats").Doc(directChatID).
 		Collection("messages").
-		OrderBy("createdAt", firestore.Desc).
+		OrderBy("createdAt", firestore.Asc).
 		Limit(limit)
 
 	docs, err := messagesRef.Documents(ctx).GetAll()

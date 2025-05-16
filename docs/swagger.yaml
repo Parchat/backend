@@ -192,10 +192,6 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: Timestamp para obtener mensajes anteriores
-        in: query
-        name: before
-        type: string
       produces:
       - application/json
       responses:
@@ -441,10 +437,6 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: Timestamp para obtener mensajes anteriores
-        in: query
-        name: before
-        type: string
       produces:
       - application/json
       responses:
