@@ -56,28 +56,29 @@ func NewRouter(
 
 		// Rutas de chat (protegidas)
 		r.Route("/chat", func(r chi.Router) {
-			// Aplicar middleware de autenticación
-			r.Use(authMw.VerifyToken)
-
-			// Rutas de salas
-			r.Route("/rooms", func(r chi.Router) {
-				r.Post("/", chatHandler.CreateRoom)
-				r.Get("/me", chatHandler.GetUserRooms)
-				r.Get("/", chatHandler.GetAllRooms)
-				r.Get("/{roomId}", chatHandler.GetRoom)
-				r.Get("/{roomId}/messages", chatHandler.GetRoomMessages)
-				r.Post("/{roomId}/join", chatHandler.JoinRoom)
-			})
-
-			// Rutas de chats directos
-			r.Route("/direct", func(r chi.Router) {
-				r.Post("/{otherUserId}", chatHandler.CreateDirectChat)
-				r.Get("/me", chatHandler.GetUserDirectChats)
-				r.Get("/{chatId}/messages", chatHandler.GetDirectChatMessages)
-			})
-
 			// WebSocket endpoint
 			r.Get("/ws", webSocketHandler.HandleWebSocket)
+
+			r.Group(func(r chi.Router) {
+				r.Use(authMw.VerifyToken) // Aplicar middleware de autenticación
+
+				// Rutas de salas
+				r.Route("/rooms", func(r chi.Router) {
+					r.Post("/", chatHandler.CreateRoom)
+					r.Get("/me", chatHandler.GetUserRooms)
+					r.Get("/", chatHandler.GetAllRooms)
+					r.Get("/{roomId}", chatHandler.GetRoom)
+					r.Get("/{roomId}/messages", chatHandler.GetRoomMessages)
+					r.Post("/{roomId}/join", chatHandler.JoinRoom)
+				})
+
+				// Rutas de chats directos
+				r.Route("/direct", func(r chi.Router) {
+					r.Post("/{otherUserId}", chatHandler.CreateDirectChat)
+					r.Get("/me", chatHandler.GetUserDirectChats)
+					r.Get("/{chatId}/messages", chatHandler.GetDirectChatMessages)
+				})
+			})
 		})
 	})
 
