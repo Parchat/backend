@@ -129,7 +129,6 @@ func (h *ChatHandler) GetUserRooms(w http.ResponseWriter, r *http.Request) {
 //	@Security		BearerAuth
 //	@Param			roomId	path		string			true	"ID de la sala"
 //	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
-//	@Param			before	query		string			false	"Timestamp para obtener mensajes anteriores"
 //	@Success		200		{array}		models.Message	"Lista de mensajes de la sala"
 //	@Failure		401		{string}	string			"No autorizado"
 //	@Failure		404		{string}	string			"Sala no encontrada"
@@ -235,7 +234,6 @@ func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request)
 //	@Security		BearerAuth
 //	@Param			chatId	path		string			true	"ID del chat directo"
 //	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
-//	@Param			before	query		string			false	"Timestamp para obtener mensajes anteriores"
 //	@Success		200		{array}		models.Message	"Lista de mensajes del chat directo"
 //	@Failure		401		{string}	string			"No autorizado"
 //	@Failure		404		{string}	string			"Chat no encontrado"

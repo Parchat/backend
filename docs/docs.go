@@ -179,12 +179,6 @@ const docTemplate = `{
                         "description": "Límite de mensajes a obtener",
                         "name": "limit",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Timestamp para obtener mensajes anteriores",
-                        "name": "before",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -567,12 +561,6 @@ const docTemplate = `{
                         "default": 50,
                         "description": "Límite de mensajes a obtener",
                         "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Timestamp para obtener mensajes anteriores",
-                        "name": "before",
                         "in": "query"
                     }
                 ],
