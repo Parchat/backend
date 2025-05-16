@@ -503,6 +503,12 @@ paths:
       consumes:
       - application/json
       description: Establece una conexión WebSocket para mensajería en tiempo real
+      parameters:
+      - description: Firebase Auth Token
+        in: query
+        name: token
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -514,8 +520,6 @@ paths:
           description: No autorizado
           schema:
             type: string
-      security:
-      - BearerAuth: []
       summary: Conexión WebSocket para chat en tiempo real
       tags:
       - Chat

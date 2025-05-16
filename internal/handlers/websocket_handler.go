@@ -3,6 +3,7 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/Parchat/backend/internal/config"
 	pws "github.com/Parchat/backend/internal/pkg/websocket"
@@ -38,15 +39,33 @@ func NewWebSocketHandler(hub *pws.Hub, firebaseAuth *config.FirebaseAuth) *WebSo
 //	@Tags			Chat
 //	@Accept			json
 //	@Produce		json
-//	@Security		BearerAuth
-//	@Success		101	{string}	string	"Switching Protocols a WebSocket"
-//	@Failure		401	{string}	string	"No autorizado"
+//	@Param			token	query		string	true	"Firebase Auth Token"
+//	@Success		101		{string}	string	"Switching Protocols a WebSocket"
+//	@Failure		401		{string}	string	"No autorizado"
 //	@Router			/chat/ws [get]
 func (h *WebSocketHandler) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
-	// Verificar el token desde el contexto (añadido por el middleware de autenticación)
-	userID, ok := r.Context().Value("userID").(string)
-	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+	// Extraer el token desde el parámetro de consulta
+	token := r.URL.Query().Get("token")
+	if token == "" {
+		http.Error(w, "Token not provided", http.StatusUnauthorized)
+		return
+	}
+
+	// Limpiar el token (por si viene con "Bearer ")
+	token = strings.TrimPrefix(token, "Bearer ")
+
+	// Verificar el token con Firebase
+	authToken, err := h.firebaseAuth.VerifyIDToken(r.Context(), token)
+	if err != nil {
+		log.Printf("Error verifying token: %v", err)
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	// Extraer el userID del token verificado
+	userID := authToken.UID
+	if userID == "" {
+		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
 		return
 	}
 

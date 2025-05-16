@@ -609,11 +609,6 @@ const docTemplate = `{
         },
         "/chat/ws": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Establece una conexión WebSocket para mensajería en tiempo real",
                 "consumes": [
                     "application/json"
@@ -625,6 +620,15 @@ const docTemplate = `{
                     "Chat"
                 ],
                 "summary": "Conexión WebSocket para chat en tiempo real",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Firebase Auth Token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "101": {
                         "description": "Switching Protocols a WebSocket",
