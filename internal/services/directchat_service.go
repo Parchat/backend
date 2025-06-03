@@ -35,7 +35,7 @@ func (s *DirectChatService) GetUserDirectChats(userID string) ([]models.DirectCh
 }
 
 // GetDirectChatMessages obtiene los mensajes de un chat directo
-func (s *DirectChatService) GetDirectChatMessages(directChatID string, limit int) ([]models.Message, error) {
+func (s *DirectChatService) GetDirectChatMessages(directChatID string, limit int) ([]models.MessageResponse, error) {
 	return s.MessageRepo.GetDirectChatMessages(directChatID, limit)
 }
 

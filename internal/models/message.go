@@ -12,3 +12,9 @@ type Message struct {
 	UpdatedAt time.Time `json:"updatedAt" firestore:"updatedAt"`
 	IsDeleted bool      `json:"isDeleted" firestore:"isDeleted"`
 }
+
+// MessageResponse es la respuesta que incluye un mensaje y el nombre del usuario que lo envió
+type MessageResponse struct {
+	Message
+	DisplayName string `json:"displayName,omitempty"`
+}

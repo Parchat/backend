@@ -55,10 +55,11 @@ func (r *MessageRepository) SaveDirectMessage(message *models.Message) error {
 }
 
 // GetRoomMessages obtiene los mensajes de una sala
-func (r *MessageRepository) GetRoomMessages(roomID string, limit int) ([]models.Message, error) {
+func (r *MessageRepository) GetRoomMessages(roomID string, limit int) ([]models.MessageResponse, error) {
 	ctx := context.Background()
 
 	var messages []models.Message
+	var response []models.MessageResponse
 
 	messagesRef := r.FirestoreClient.Client.
 		Collection("rooms").Doc(roomID).
@@ -71,22 +72,53 @@ func (r *MessageRepository) GetRoomMessages(roomID string, limit int) ([]models.
 		return nil, err
 	}
 
+	// Get messages and track unique user IDs
+	userIDs := make(map[string]bool)
 	for _, doc := range docs {
 		var message models.Message
 		if err := doc.DataTo(&message); err != nil {
 			return nil, err
 		}
 		messages = append(messages, message)
+		userIDs[message.UserID] = true
 	}
 
-	return messages, nil
+	// Map to store user data to avoid duplicate fetches
+	userDataCache := make(map[string]string) // userId -> displayName
+
+	// Fetch user data for all unique userIds
+	for userID := range userIDs {
+		userDoc, err := r.FirestoreClient.Client.Collection("users").Doc(userID).Get(ctx)
+		if err == nil {
+			var user models.User
+			if err := userDoc.DataTo(&user); err == nil {
+				userDataCache[userID] = user.DisplayName
+			}
+		}
+	}
+
+	for _, message := range messages {
+		msgMap := models.MessageResponse{
+			Message: message,
+		}
+
+		// Add displayName if available in cache
+		if displayName, exists := userDataCache[message.UserID]; exists {
+			msgMap.DisplayName = displayName
+		}
+
+		response = append(response, msgMap)
+	}
+
+	return response, nil
 }
 
 // GetDirectChatMessages obtiene los mensajes de un chat directo
-func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int) ([]models.Message, error) {
+func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int) ([]models.MessageResponse, error) {
 	ctx := context.Background()
 
 	var messages []models.Message
+	var response []models.MessageResponse
 
 	messagesRef := r.FirestoreClient.Client.
 		Collection("directChats").Doc(directChatID).
@@ -99,13 +131,43 @@ func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int
 		return nil, err
 	}
 
+	// Get messages and track unique user IDs
+	userIDs := make(map[string]bool)
 	for _, doc := range docs {
 		var message models.Message
 		if err := doc.DataTo(&message); err != nil {
 			return nil, err
 		}
 		messages = append(messages, message)
+		userIDs[message.UserID] = true
 	}
 
-	return messages, nil
+	// Map to store user data to avoid duplicate fetches
+	userDataCache := make(map[string]string) // userId -> displayName
+
+	// Fetch user data for all unique userIds
+	for userID := range userIDs {
+		userDoc, err := r.FirestoreClient.Client.Collection("users").Doc(userID).Get(ctx)
+		if err == nil {
+			var user models.User
+			if err := userDoc.DataTo(&user); err == nil {
+				userDataCache[userID] = user.DisplayName
+			}
+		}
+	}
+
+	for _, message := range messages {
+		msgMap := models.MessageResponse{
+			Message: message,
+		}
+
+		// Add displayName if available in cache
+		if displayName, exists := userDataCache[message.UserID]; exists {
+			msgMap.DisplayName = displayName
+		}
+
+		response = append(response, msgMap)
+	}
+
+	return response, nil
 }

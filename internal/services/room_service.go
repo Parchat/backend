@@ -52,7 +52,7 @@ func (s *RoomService) GetUserRooms(userID string) ([]models.Room, error) {
 }
 
 // GetRoomMessages obtiene los mensajes de una sala
-func (s *RoomService) GetRoomMessages(roomID string, limit int) ([]models.Message, error) {
+func (s *RoomService) GetRoomMessages(roomID string, limit int) ([]models.MessageResponse, error) {
 	return s.MessageRepo.GetRoomMessages(roomID, limit)
 }
 
