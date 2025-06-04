@@ -119,17 +119,18 @@ func (h *ChatHandler) GetUserRooms(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(rooms)
 }
 
-// GetRoomMessages obtiene los mensajes de una sala
+// GetRoomMessages obtiene los mensajes de una sala con paginación ordernada por fecha de creación descendente
 //
 //	@Summary		Obtiene mensajes de una sala
-//	@Description	Devuelve los mensajes de una sala específica
+//	@Description	Devuelve los mensajes de una sala específica con soporte para paginación ordernada por fecha de creación descendente
 //	@Tags			Chat
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			roomId	path		string			true	"ID de la sala"
 //	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
-//	@Success		200		{array}		models.Message	"Lista de mensajes de la sala"
+//	@Param			cursor	query		string			false	"Cursor para paginación (timestamp)" default("1747441934")
+//	@Success		200		{object}	models.PaginatedMessagesResponse	"Mensajes paginados de la sala"
 //	@Failure		401		{string}	string			"No autorizado"
 //	@Failure		404		{string}	string			"Sala no encontrada"
 //	@Failure		500		{string}	string			"Error interno del servidor"
@@ -147,13 +148,21 @@ func (h *ChatHandler) GetRoomMessages(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	messages, err := h.RoomService.GetRoomMessages(roomID, limit)
+	cursor := r.URL.Query().Get("cursor")
+
+	messages, nextCursor, err := h.RoomService.GetRoomMessages(roomID, limit, cursor)
 	if err != nil {
 		http.Error(w, "Error getting messages: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(messages)
+	response := models.PaginatedMessagesResponse{
+		Messages:   messages,
+		NextCursor: nextCursor,
+		HasMore:    nextCursor != "",
+	}
+
+	json.NewEncoder(w).Encode(response)
 }
 
 // CreateDirectChat crea o encuentra un chat directo entre dos usuarios

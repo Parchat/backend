@@ -18,3 +18,10 @@ type MessageResponse struct {
 	Message
 	DisplayName string `json:"displayName,omitempty"`
 }
+
+// PaginatedMessagesResponse representa una respuesta paginada de mensajes
+type PaginatedMessagesResponse struct {
+	Messages   []MessageResponse `json:"messages"`
+	NextCursor string            `json:"nextCursor,omitempty"`
+	HasMore    bool              `json:"hasMore"`
+}

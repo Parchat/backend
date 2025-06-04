@@ -57,6 +57,36 @@ definitions:
       userId:
         type: string
     type: object
+  models.MessageResponse:
+    properties:
+      content:
+        type: string
+      createdAt:
+        type: string
+      displayName:
+        type: string
+      id:
+        type: string
+      isDeleted:
+        type: boolean
+      roomId:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  models.PaginatedMessagesResponse:
+    properties:
+      hasMore:
+        type: boolean
+      messages:
+        items:
+          $ref: '#/definitions/models.MessageResponse'
+        type: array
+      nextCursor:
+        type: string
+    type: object
   models.Room:
     properties:
       admins:
@@ -425,7 +455,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Devuelve los mensajes de una sala específica
+      description: Devuelve los mensajes de una sala específica con soporte para paginación
+        ordernada por fecha de creación descendente
       parameters:
       - description: ID de la sala
         in: path
@@ -437,15 +468,18 @@ paths:
         in: query
         name: limit
         type: integer
+      - default: '"1747441934"'
+        description: Cursor para paginación (timestamp)
+        in: query
+        name: cursor
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Lista de mensajes de la sala
+          description: Mensajes paginados de la sala
           schema:
-            items:
-              $ref: '#/definitions/models.Message'
-            type: array
+            $ref: '#/definitions/models.PaginatedMessagesResponse'
         "401":
           description: No autorizado
           schema:
