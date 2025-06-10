@@ -68,7 +68,8 @@ func NewRouter(
 					r.Get("/me", chatHandler.GetUserRooms)
 					r.Get("/", chatHandler.GetAllRooms)
 					r.Get("/{roomId}", chatHandler.GetRoom)
-					r.Get("/{roomId}/messages", chatHandler.GetRoomMessages)
+					r.Get("/{roomId}/messages", chatHandler.GetRoomMessagesSimple)
+					r.Get("/{roomId}/messages/paginated", chatHandler.GetRoomMessages)
 					r.Post("/{roomId}/join", chatHandler.JoinRoom)
 				})
 

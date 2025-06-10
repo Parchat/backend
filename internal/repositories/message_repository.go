@@ -197,3 +197,60 @@ func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int
 
 	return response, nil
 }
+
+// GetRoomMessagesSimple obtiene los mensajes de una sala sin paginación
+func (r *MessageRepository) GetRoomMessagesSimple(roomID string, limit int) ([]models.MessageResponse, error) {
+	ctx := context.Background()
+
+	var messages []models.Message
+	var response []models.MessageResponse
+
+	messagesRef := r.FirestoreClient.Client.
+		Collection("rooms").Doc(roomID).
+		Collection("messages").
+		OrderBy("createdAt", firestore.Asc).
+		Limit(limit)
+
+	docs, err := messagesRef.Documents(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get messages and track unique user IDs
+	userIDs := make(map[string]bool)
+	for _, doc := range docs {
+		var message models.Message
+		if err := doc.DataTo(&message); err != nil {
+			return nil, err
+		}
+		messages = append(messages, message)
+		userIDs[message.UserID] = true
+	}
+
+	// Map to store user data to avoid duplicate fetches
+	userDataCache := make(map[string]string) // userId -> displayName
+
+	// Fetch user data for all unique userIds
+	for userID := range userIDs {
+		userDoc, err := r.FirestoreClient.Client.Collection("users").Doc(userID).Get(ctx)
+		if err != nil {
+			// Si hay error, continuamos pero sin el displayName
+			continue
+		}
+		var user models.User
+		if err := userDoc.DataTo(&user); err == nil {
+			userDataCache[userID] = user.DisplayName
+		}
+	}
+
+	// Construir la respuesta con los displayNames
+	for _, message := range messages {
+		msgResponse := models.MessageResponse{
+			Message:     message,
+			DisplayName: userDataCache[message.UserID], // Puede estar vacío si no se encontró
+		}
+		response = append(response, msgResponse)
+	}
+
+	return response, nil
+}
