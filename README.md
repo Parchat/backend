@@ -92,6 +92,7 @@ Una vez iniciado el servidor puedes acceder a la documentación desde [http://lo
 - `GET /api/v1/chat/rooms`: Obtiene todas las salas del usuario actual
 - `GET /api/v1/chat/rooms/{roomId}`: Obtiene información de una sala específica
 - `GET /api/v1/chat/rooms/{roomId}/messages`: Obtiene mensajes de una sala específica
+- `GET /api/v1/chat/rooms/{roomId}/messages/paginated`: Obtiene mensajes de una sala específica paginados
 
 #### Chats Directos
 - `POST /api/v1/chat/direct/{otherUserId}`: Crea un chat directo entre el usuario autenticado y otro usuario
