@@ -206,7 +206,7 @@ paths:
       summary: Registra un nuevo usuario
       tags:
       - Auth
-  /chat/direct/{chatId}/messages:
+  /chat/direct/{chatId}/messages/paginated:
     get:
       consumes:
       - application/json
@@ -452,52 +452,6 @@ paths:
       tags:
       - Chat
   /chat/rooms/{roomId}/messages:
-    get:
-      consumes:
-      - application/json
-      description: Devuelve los mensajes de una sala específica con soporte para paginación
-        ordernada por fecha de creación descendente
-      parameters:
-      - description: ID de la sala
-        in: path
-        name: roomId
-        required: true
-        type: string
-      - default: 50
-        description: Límite de mensajes a obtener
-        in: query
-        name: limit
-        type: integer
-      - default: '"1747441934"'
-        description: Cursor para paginación (timestamp)
-        in: query
-        name: cursor
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Mensajes paginados de la sala
-          schema:
-            $ref: '#/definitions/models.PaginatedMessagesResponse'
-        "401":
-          description: No autorizado
-          schema:
-            type: string
-        "404":
-          description: Sala no encontrada
-          schema:
-            type: string
-        "500":
-          description: Error interno del servidor
-          schema:
-            type: string
-      security:
-      - BearerAuth: []
-      summary: Obtiene mensajes de una sala
-      tags:
-      - Chat
-  /chat/rooms/{roomId}/messages/simple:
     get:
       consumes:
       - application/json
