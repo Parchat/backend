@@ -179,12 +179,6 @@ const docTemplate = `{
                         "description": "Límite de mensajes a obtener",
                         "name": "limit",
                         "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Timestamp para obtener mensajes anteriores",
-                        "name": "before",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -543,7 +537,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Devuelve los mensajes de una sala específica",
+                "description": "Devuelve los mensajes de una sala específica con soporte para paginación ordernada por fecha de creación descendente",
                 "consumes": [
                     "application/json"
                 ],
@@ -571,8 +565,71 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Timestamp para obtener mensajes anteriores",
-                        "name": "before",
+                        "default": "\"1747441934\"",
+                        "description": "Cursor para paginación (timestamp)",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mensajes paginados de la sala",
+                        "schema": {
+                            "$ref": "#/definitions/models.PaginatedMessagesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Sala no encontrada",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/rooms/{roomId}/messages/simple": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devuelve los mensajes de una sala específica sin paginación",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Obtiene mensajes de una sala (versión simple)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID de la sala",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Límite de mensajes a obtener",
+                        "name": "limit",
                         "in": "query"
                     }
                 ],
@@ -582,7 +639,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Message"
+                                "$ref": "#/definitions/models.MessageResponse"
                             }
                         }
                     },
@@ -609,11 +666,6 @@ const docTemplate = `{
         },
         "/chat/ws": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
                 "description": "Establece una conexión WebSocket para mensajería en tiempo real",
                 "consumes": [
                     "application/json"
@@ -625,6 +677,15 @@ const docTemplate = `{
                     "Chat"
                 ],
                 "summary": "Conexión WebSocket para chat en tiempo real",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Firebase Auth Token",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "101": {
                         "description": "Switching Protocols a WebSocket",
@@ -726,6 +787,52 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isDeleted": {
+                    "type": "boolean"
+                },
+                "roomId": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PaginatedMessagesResponse": {
+            "type": "object",
+            "properties": {
+                "hasMore": {
+                    "type": "boolean"
+                },
+                "messages": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.MessageResponse"
+                    }
+                },
+                "nextCursor": {
                     "type": "string"
                 }
             }

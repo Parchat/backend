@@ -2,6 +2,9 @@ package repositories
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"github.com/Parchat/backend/internal/config"
@@ -54,44 +57,99 @@ func (r *MessageRepository) SaveDirectMessage(message *models.Message) error {
 	return nil
 }
 
-// GetRoomMessages obtiene los mensajes de una sala
-func (r *MessageRepository) GetRoomMessages(roomID string, limit int) ([]models.Message, error) {
+func (r *MessageRepository) GetRoomMessages(roomID string, limit int, cursor string) ([]models.MessageResponse, string, error) {
 	ctx := context.Background()
 
 	var messages []models.Message
+	var response []models.MessageResponse
+	var nextCursor string
 
-	messagesRef := r.FirestoreClient.Client.
+	// Crear la consulta base - Orden ASCENDENTE para paginación hacia atrás
+	query := r.FirestoreClient.Client.
 		Collection("rooms").Doc(roomID).
 		Collection("messages").
-		OrderBy("createdAt", firestore.Desc).
+		OrderBy("createdAt", firestore.Desc). // Cambiado a Asc
 		Limit(limit)
 
-	docs, err := messagesRef.Documents(ctx).GetAll()
-	if err != nil {
-		return nil, err
+	// Si hay un cursor, añadir la condición para empezar desde ese punto
+	if cursor != "" {
+		// Intentar convertir el cursor a un timestamp
+		// Se espera que el cursor sea un timestamp en formato Unix (string)
+		timestamp, err := strconv.ParseInt(cursor, 10, 64)
+		if err == nil {
+			// Convertir el timestamp a time.Time
+			cursorTime := time.Unix(timestamp, 0)
+			//fmt.Println("Cursor time:", cursorTime.String())
+
+			// Usar EndBefore con el valor convertido
+			query = query.StartAfter(cursorTime)
+		}
 	}
 
-	for _, doc := range docs {
+	// Ejecutar la consulta
+	docs, err := query.Documents(ctx).GetAll()
+	if err != nil {
+		return nil, "", fmt.Errorf("error obtaining messages: %v", err)
+	}
+
+	// Get messages and track unique user IDs
+	userIDs := make(map[string]bool)
+
+	for i, doc := range docs {
 		var message models.Message
 		if err := doc.DataTo(&message); err != nil {
-			return nil, err
+			return nil, "", fmt.Errorf("error decoding message: %v", err)
 		}
 		messages = append(messages, message)
+		userIDs[message.UserID] = true
+
+		// Guardar el último timestamp para el cursor de siguiente página
+		if i == len(docs)-1 && len(docs) == limit {
+			//fmt.Println("Last message timestamp:", message.CreatedAt.Unix())
+			//fmt.Println("Content:", message.Content)
+			nextCursor = strconv.FormatInt(message.CreatedAt.Unix(), 10)
+		}
 	}
 
-	return messages, nil
+	// Map to store user data to avoid duplicate fetches
+	userDataCache := make(map[string]string) // userId -> displayName
+
+	// Fetch user data for all unique userIds
+	for userID := range userIDs {
+		userDoc, err := r.FirestoreClient.Client.Collection("users").Doc(userID).Get(ctx)
+		if err != nil {
+			// Si hay error, continuamos pero sin el displayName
+			continue
+		}
+		var user models.User
+		if err := userDoc.DataTo(&user); err == nil {
+			userDataCache[userID] = user.DisplayName
+		}
+	}
+
+	// Construir la respuesta con los displayNames
+	for _, message := range messages {
+		msgResponse := models.MessageResponse{
+			Message:     message,
+			DisplayName: userDataCache[message.UserID], // Puede estar vacío si no se encontró
+		}
+		response = append(response, msgResponse)
+	}
+
+	return response, nextCursor, nil
 }
 
 // GetDirectChatMessages obtiene los mensajes de un chat directo
-func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int) ([]models.Message, error) {
+func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int) ([]models.MessageResponse, error) {
 	ctx := context.Background()
 
 	var messages []models.Message
+	var response []models.MessageResponse
 
 	messagesRef := r.FirestoreClient.Client.
 		Collection("directChats").Doc(directChatID).
 		Collection("messages").
-		OrderBy("createdAt", firestore.Desc).
+		OrderBy("createdAt", firestore.Asc).
 		Limit(limit)
 
 	docs, err := messagesRef.Documents(ctx).GetAll()
@@ -99,13 +157,100 @@ func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int
 		return nil, err
 	}
 
+	// Get messages and track unique user IDs
+	userIDs := make(map[string]bool)
 	for _, doc := range docs {
 		var message models.Message
 		if err := doc.DataTo(&message); err != nil {
 			return nil, err
 		}
 		messages = append(messages, message)
+		userIDs[message.UserID] = true
 	}
 
-	return messages, nil
+	// Map to store user data to avoid duplicate fetches
+	userDataCache := make(map[string]string) // userId -> displayName
+
+	// Fetch user data for all unique userIds
+	for userID := range userIDs {
+		userDoc, err := r.FirestoreClient.Client.Collection("users").Doc(userID).Get(ctx)
+		if err == nil {
+			var user models.User
+			if err := userDoc.DataTo(&user); err == nil {
+				userDataCache[userID] = user.DisplayName
+			}
+		}
+	}
+
+	for _, message := range messages {
+		msgMap := models.MessageResponse{
+			Message: message,
+		}
+
+		// Add displayName if available in cache
+		if displayName, exists := userDataCache[message.UserID]; exists {
+			msgMap.DisplayName = displayName
+		}
+
+		response = append(response, msgMap)
+	}
+
+	return response, nil
+}
+
+// GetRoomMessagesSimple obtiene los mensajes de una sala sin paginación
+func (r *MessageRepository) GetRoomMessagesSimple(roomID string, limit int) ([]models.MessageResponse, error) {
+	ctx := context.Background()
+
+	var messages []models.Message
+	var response []models.MessageResponse
+
+	messagesRef := r.FirestoreClient.Client.
+		Collection("rooms").Doc(roomID).
+		Collection("messages").
+		OrderBy("createdAt", firestore.Asc).
+		Limit(limit)
+
+	docs, err := messagesRef.Documents(ctx).GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get messages and track unique user IDs
+	userIDs := make(map[string]bool)
+	for _, doc := range docs {
+		var message models.Message
+		if err := doc.DataTo(&message); err != nil {
+			return nil, err
+		}
+		messages = append(messages, message)
+		userIDs[message.UserID] = true
+	}
+
+	// Map to store user data to avoid duplicate fetches
+	userDataCache := make(map[string]string) // userId -> displayName
+
+	// Fetch user data for all unique userIds
+	for userID := range userIDs {
+		userDoc, err := r.FirestoreClient.Client.Collection("users").Doc(userID).Get(ctx)
+		if err != nil {
+			// Si hay error, continuamos pero sin el displayName
+			continue
+		}
+		var user models.User
+		if err := userDoc.DataTo(&user); err == nil {
+			userDataCache[userID] = user.DisplayName
+		}
+	}
+
+	// Construir la respuesta con los displayNames
+	for _, message := range messages {
+		msgResponse := models.MessageResponse{
+			Message:     message,
+			DisplayName: userDataCache[message.UserID], // Puede estar vacío si no se encontró
+		}
+		response = append(response, msgResponse)
+	}
+
+	return response, nil
 }

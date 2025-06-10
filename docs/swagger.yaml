@@ -57,6 +57,36 @@ definitions:
       userId:
         type: string
     type: object
+  models.MessageResponse:
+    properties:
+      content:
+        type: string
+      createdAt:
+        type: string
+      displayName:
+        type: string
+      id:
+        type: string
+      isDeleted:
+        type: boolean
+      roomId:
+        type: string
+      updatedAt:
+        type: string
+      userId:
+        type: string
+    type: object
+  models.PaginatedMessagesResponse:
+    properties:
+      hasMore:
+        type: boolean
+      messages:
+        items:
+          $ref: '#/definitions/models.MessageResponse'
+        type: array
+      nextCursor:
+        type: string
+    type: object
   models.Room:
     properties:
       admins:
@@ -192,10 +222,6 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: Timestamp para obtener mensajes anteriores
-        in: query
-        name: before
-        type: string
       produces:
       - application/json
       responses:
@@ -429,7 +455,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Devuelve los mensajes de una sala específica
+      description: Devuelve los mensajes de una sala específica con soporte para paginación
+        ordernada por fecha de creación descendente
       parameters:
       - description: ID de la sala
         in: path
@@ -441,19 +468,18 @@ paths:
         in: query
         name: limit
         type: integer
-      - description: Timestamp para obtener mensajes anteriores
+      - default: '"1747441934"'
+        description: Cursor para paginación (timestamp)
         in: query
-        name: before
+        name: cursor
         type: string
       produces:
       - application/json
       responses:
         "200":
-          description: Lista de mensajes de la sala
+          description: Mensajes paginados de la sala
           schema:
-            items:
-              $ref: '#/definitions/models.Message'
-            type: array
+            $ref: '#/definitions/models.PaginatedMessagesResponse'
         "401":
           description: No autorizado
           schema:
@@ -469,6 +495,48 @@ paths:
       security:
       - BearerAuth: []
       summary: Obtiene mensajes de una sala
+      tags:
+      - Chat
+  /chat/rooms/{roomId}/messages/simple:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve los mensajes de una sala específica sin paginación
+      parameters:
+      - description: ID de la sala
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - default: 50
+        description: Límite de mensajes a obtener
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de mensajes de la sala
+          schema:
+            items:
+              $ref: '#/definitions/models.MessageResponse'
+            type: array
+        "401":
+          description: No autorizado
+          schema:
+            type: string
+        "404":
+          description: Sala no encontrada
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtiene mensajes de una sala (versión simple)
       tags:
       - Chat
   /chat/rooms/me:
@@ -503,6 +571,12 @@ paths:
       consumes:
       - application/json
       description: Establece una conexión WebSocket para mensajería en tiempo real
+      parameters:
+      - description: Firebase Auth Token
+        in: query
+        name: token
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -514,8 +588,6 @@ paths:
           description: No autorizado
           schema:
             type: string
-      security:
-      - BearerAuth: []
       summary: Conexión WebSocket para chat en tiempo real
       tags:
       - Chat

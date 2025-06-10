@@ -51,9 +51,14 @@ func (s *RoomService) GetUserRooms(userID string) ([]models.Room, error) {
 	return s.RoomRepo.GetUserRooms(userID)
 }
 
-// GetRoomMessages obtiene los mensajes de una sala
-func (s *RoomService) GetRoomMessages(roomID string, limit int) ([]models.Message, error) {
-	return s.MessageRepo.GetRoomMessages(roomID, limit)
+// GetRoomMessages obtiene los mensajes de una sala con paginación
+func (s *RoomService) GetRoomMessages(roomID string, limit int, cursor string) ([]models.MessageResponse, string, error) {
+	return s.MessageRepo.GetRoomMessages(roomID, limit, cursor)
+}
+
+// GetRoomMessagesSimple obtiene los mensajes de una sala sin paginación
+func (s *RoomService) GetRoomMessagesSimple(roomID string, limit int) ([]models.MessageResponse, error) {
+	return s.MessageRepo.GetRoomMessagesSimple(roomID, limit)
 }
 
 // GetAllRooms obtiene todas las salas ordenadas por fecha de actualización
