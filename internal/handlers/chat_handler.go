@@ -247,7 +247,7 @@ func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request)
 //	@Failure		401		{string}	string			"No autorizado"
 //	@Failure		404		{string}	string			"Chat no encontrado"
 //	@Failure		500		{string}	string			"Error interno del servidor"
-//	@Router			/chat/direct/{chatId}/messages [get]
+//	@Router			/chat/direct/{chatId}/messages/paginated [get]
 func (h *ChatHandler) GetDirectChatMessages(w http.ResponseWriter, r *http.Request) {
 	chatID := chi.URLParam(r, "chatId")
 
@@ -354,7 +354,7 @@ func (h *ChatHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 // @Failure      401      {string}    string          "No autorizado"
 // @Failure      404      {string}    string          "Sala no encontrada"
 // @Failure      500      {string}    string          "Error interno del servidor"
-// @Router       /chat/rooms/{roomId}/messages/simple [get]
+// @Router       /chat/rooms/{roomId}/messages [get]
 func (h *ChatHandler) GetRoomMessagesSimple(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
 
