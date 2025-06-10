@@ -147,7 +147,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/chat/direct/{chatId}/messages": {
+        "/chat/direct/{chatId}/messages/paginated": {
             "get": {
                 "security": [
                     {
@@ -531,75 +531,6 @@ const docTemplate = `{
             }
         },
         "/chat/rooms/{roomId}/messages": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Devuelve los mensajes de una sala específica con soporte para paginación ordernada por fecha de creación descendente",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Chat"
-                ],
-                "summary": "Obtiene mensajes de una sala",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "ID de la sala",
-                        "name": "roomId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 50,
-                        "description": "Límite de mensajes a obtener",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "default": "\"1747441934\"",
-                        "description": "Cursor para paginación (timestamp)",
-                        "name": "cursor",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Mensajes paginados de la sala",
-                        "schema": {
-                            "$ref": "#/definitions/models.PaginatedMessagesResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "No autorizado",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Sala no encontrada",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Error interno del servidor",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/chat/rooms/{roomId}/messages/simple": {
             "get": {
                 "security": [
                     {
