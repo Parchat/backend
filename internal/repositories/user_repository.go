@@ -35,3 +35,23 @@ func (r *UserRepository) CreateUser(user *models.User) error {
 
 	return nil
 }
+
+// GetUserByID obtiene un usuario de la base de datos por su ID
+func (r *UserRepository) GetUserByID(ctx context.Context, userID string) (*models.User, error) {
+	docRef := r.FirestoreClient.Client.Collection("users").Doc(userID)
+	docSnap, err := docRef.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if !docSnap.Exists() {
+		return nil, nil // El usuario no existe
+	}
+
+	var user models.User
+	if err := docSnap.DataTo(&user); err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}

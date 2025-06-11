@@ -756,6 +756,40 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Verifica si el usuario autenticado existe en la base de datos, si no, lo crea con los datos de autenticación",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Asegura que el usuario exista en la base de datos",
+                "responses": {
+                    "200": {
+                        "description": "Datos del usuario",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -827,6 +861,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "createdAt": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "description": "Excluido de Firestore",
                     "type": "string"
                 },
                 "id": {
