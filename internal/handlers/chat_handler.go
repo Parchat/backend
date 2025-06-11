@@ -127,13 +127,13 @@ func (h *ChatHandler) GetUserRooms(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			roomId	path		string			true	"ID de la sala"
-//	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
-//	@Param			cursor	query		string			false	"Cursor para paginación (timestamp)" default("1747441934")
+//	@Param			roomId	path		string								true	"ID de la sala"
+//	@Param			limit	query		int									false	"Límite de mensajes a obtener"			default(50)
+//	@Param			cursor	query		string								false	"Cursor para paginación (timestamp)"	default("1747441934")
 //	@Success		200		{object}	models.PaginatedMessagesResponse	"Mensajes paginados de la sala"
-//	@Failure		401		{string}	string			"No autorizado"
-//	@Failure		404		{string}	string			"Sala no encontrada"
-//	@Failure		500		{string}	string			"Error interno del servidor"
+//	@Failure		401		{string}	string								"No autorizado"
+//	@Failure		404		{string}	string								"Sala no encontrada"
+//	@Failure		500		{string}	string								"Error interno del servidor"
 //	@Router			/chat/rooms/{roomId}/messages/paginated [get]
 func (h *ChatHandler) GetRoomMessages(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
@@ -342,19 +342,19 @@ func (h *ChatHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 
 // GetRoomMessagesSimple obtiene los mensajes de una sala sin paginación
 //
-// @Summary      Obtiene mensajes de una sala (versión simple)
-// @Description  Devuelve los mensajes de una sala específica sin paginación
-// @Tags         Chat
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        roomId   path        string          true  "ID de la sala"
-// @Param        limit    query       int             false "Límite de mensajes a obtener" default(50)
-// @Success      200      {array}     models.MessageResponse "Lista de mensajes de la sala"
-// @Failure      401      {string}    string          "No autorizado"
-// @Failure      404      {string}    string          "Sala no encontrada"
-// @Failure      500      {string}    string          "Error interno del servidor"
-// @Router       /chat/rooms/{roomId}/messages [get]
+//	@Summary		Obtiene mensajes de una sala (versión simple)
+//	@Description	Devuelve los mensajes de una sala específica sin paginación
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			roomId	path		string					true	"ID de la sala"
+//	@Param			limit	query		int						false	"Límite de mensajes a obtener"	default(50)
+//	@Success		200		{array}		models.MessageResponse	"Lista de mensajes de la sala"
+//	@Failure		401		{string}	string					"No autorizado"
+//	@Failure		404		{string}	string					"Sala no encontrada"
+//	@Failure		500		{string}	string					"Error interno del servidor"
+//	@Router			/chat/rooms/{roomId}/messages [get]
 func (h *ChatHandler) GetRoomMessagesSimple(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
 

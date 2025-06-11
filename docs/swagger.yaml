@@ -46,6 +46,9 @@ definitions:
         type: string
       createdAt:
         type: string
+      displayName:
+        description: Excluido de Firestore
+        type: string
       id:
         type: string
       isDeleted:
@@ -626,6 +629,28 @@ paths:
       summary: Conexión WebSocket para chat en tiempo real
       tags:
       - Chat
+  /user/ensure:
+    post:
+      consumes:
+      - application/json
+      description: Verifica si el usuario autenticado existe en la base de datos,
+        si no, lo crea con los datos de autenticación
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Datos del usuario
+          schema:
+            $ref: '#/definitions/models.User'
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Asegura que el usuario exista en la base de datos
+      tags:
+      - User
 securityDefinitions:
   BearerAuth:
     in: header
