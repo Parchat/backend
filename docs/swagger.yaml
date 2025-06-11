@@ -629,7 +629,7 @@ paths:
       summary: Conexión WebSocket para chat en tiempo real
       tags:
       - Chat
-  /user/ensure:
+  /user/create:
     post:
       consumes:
       - application/json

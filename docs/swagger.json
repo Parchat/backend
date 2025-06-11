@@ -750,7 +750,7 @@
                 }
             }
         },
-        "/user/ensure": {
+        "/user/create": {
             "post": {
                 "security": [
                     {

@@ -48,7 +48,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 //	@Security		BearerAuth
 //	@Success		200	{object}	models.User	"Datos del usuario"
 //	@Failure		500	{string}	string		"Error interno del servidor"
-//	@Router			/user/ensure [post]
+//	@Router			/user/create [post]
 func (h *UserHandler) EnsureUserExists(w http.ResponseWriter, r *http.Request) {
 	// Obtener el ID del usuario del contexto
 	userID, ok := r.Context().Value("userID").(string)

@@ -757,7 +757,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/user/ensure": {
+        "/user/create": {
             "post": {
                 "security": [
                     {
