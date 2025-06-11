@@ -376,3 +376,50 @@ func (h *ChatHandler) GetRoomMessagesSimple(w http.ResponseWriter, r *http.Reque
 
 	json.NewEncoder(w).Encode(messages)
 }
+
+// GetChat obtiene un chat directo por ID
+//
+//	@Summary		Obtiene un chat directo por ID
+//	@Description	Devuelve los detalles de un chat directo específico
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			chatId	path		string				true	"ID del chat directo"
+//	@Success		200		{object}	models.DirectChat	"Detalles del chat directo"
+//	@Failure		401		{string}	string				"No autorizado"
+//	@Failure		404		{string}	string				"Chat no encontrado"
+//	@Failure		500		{string}	string				"Error interno del servidor"
+//	@Router			/chat/direct/{chatId} [get]
+func (h *ChatHandler) GetChat(w http.ResponseWriter, r *http.Request) {
+	chatID := chi.URLParam(r, "chatId")
+
+	// Obtener el ID del usuario del contexto
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	chat, err := h.DirectChatService.GetDirectChat(chatID)
+	if err != nil {
+		http.Error(w, "Error getting chat: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Verificar si el usuario tiene acceso a este chat
+	hasAccess := false
+	for _, id := range chat.UserIDs {
+		if id == userID {
+			hasAccess = true
+			break
+		}
+	}
+
+	if !hasAccess {
+		http.Error(w, "Unauthorized access to this chat", http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(chat)
+}

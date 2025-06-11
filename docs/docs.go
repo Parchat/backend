@@ -147,6 +147,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/direct/{chatId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devuelve los detalles de un chat directo específico",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Obtiene un chat directo por ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del chat directo",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del chat directo",
+                        "schema": {
+                            "$ref": "#/definitions/models.DirectChat"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Chat no encontrado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/direct/{chatId}/messages": {
             "get": {
                 "security": [

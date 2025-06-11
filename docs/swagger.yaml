@@ -206,6 +206,41 @@ paths:
       summary: Registra un nuevo usuario
       tags:
       - Auth
+  /chat/direct/{chatId}:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve los detalles de un chat directo específico
+      parameters:
+      - description: ID del chat directo
+        in: path
+        name: chatId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detalles del chat directo
+          schema:
+            $ref: '#/definitions/models.DirectChat'
+        "401":
+          description: No autorizado
+          schema:
+            type: string
+        "404":
+          description: Chat no encontrado
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtiene un chat directo por ID
+      tags:
+      - Chat
   /chat/direct/{chatId}/messages:
     get:
       consumes:
