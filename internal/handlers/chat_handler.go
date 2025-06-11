@@ -224,7 +224,7 @@ func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	chats, err := h.DirectChatService.GetUserDirectChats(userID)
+	chats, err := h.DirectChatService.GetUserDirectChatsWithSenderNames(userID)
 	if err != nil {
 		http.Error(w, "Error getting direct chats: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -401,7 +401,7 @@ func (h *ChatHandler) GetChat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chat, err := h.DirectChatService.GetDirectChat(chatID)
+	chat, err := h.DirectChatService.GetDirectChatWithSenderName(chatID)
 	if err != nil {
 		http.Error(w, "Error getting chat: "+err.Error(), http.StatusInternalServerError)
 		return
