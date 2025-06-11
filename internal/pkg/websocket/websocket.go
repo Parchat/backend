@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"time"
@@ -143,6 +144,16 @@ func (c *Client) ReadPump() {
 				log.Printf("Error updating last message: %v", err)
 			}
 
+			// Obtener el displayName del usuario
+			ctx := context.Background()
+			userDoc, err := c.hub.firestoreClient.Client.Collection("users").Doc(c.userID).Get(ctx)
+			if err == nil {
+				var user models.User
+				if err := userDoc.DataTo(&user); err == nil {
+					chatMsg.DisplayName = user.DisplayName
+				}
+			}
+
 			// Convertir el mensaje de vuelta a JSON para difundir
 			payload, _ := json.Marshal(chatMsg)
 			wsMessage.Payload = payload
@@ -198,6 +209,16 @@ func (c *Client) ReadPump() {
 			err = c.hub.directChatRepo.UpdateLastMessage(chatMsg.RoomID, &chatMsg)
 			if err != nil {
 				log.Printf("Error updating last message in direct chat: %v", err)
+			}
+
+			// Obtener el displayName del usuario
+			ctx := context.Background()
+			userDoc, err := c.hub.firestoreClient.Client.Collection("users").Doc(c.userID).Get(ctx)
+			if err == nil {
+				var user models.User
+				if err := userDoc.DataTo(&user); err == nil {
+					chatMsg.DisplayName = user.DisplayName
+				}
 			}
 
 			// Convertir el mensaje de vuelta a JSON para difundir
