@@ -77,6 +77,7 @@ func NewRouter(
 				r.Route("/direct", func(r chi.Router) {
 					r.Post("/{otherUserId}", chatHandler.CreateDirectChat)
 					r.Get("/me", chatHandler.GetUserDirectChats)
+					r.Get("/{chatId}", chatHandler.GetChat)
 					r.Get("/{chatId}/messages", chatHandler.GetDirectChatMessages)
 				})
 			})
