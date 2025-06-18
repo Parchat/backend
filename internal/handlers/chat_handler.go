@@ -245,11 +245,25 @@ func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request)
 //	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
 //	@Success		200		{array}		models.Message	"Lista de mensajes del chat directo"
 //	@Failure		401		{string}	string			"No autorizado"
+//	@Failure		403		{string}	string			"Acceso prohibido"
 //	@Failure		404		{string}	string			"Chat no encontrado"
 //	@Failure		500		{string}	string			"Error interno del servidor"
 //	@Router			/chat/direct/{chatId}/messages [get]
 func (h *ChatHandler) GetDirectChatMessages(w http.ResponseWriter, r *http.Request) {
 	chatID := chi.URLParam(r, "chatId")
+
+	// Obtener el ID del usuario del contexto
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	// Verificar si el usuario pertenece al chat directo
+	if !h.DirectChatService.DirectChatRepo.IsUserInDirectChat(chatID, userID) {
+		http.Error(w, "Unauthorized access to this chat", http.StatusForbidden)
+		return
+	}
 
 	limitStr := r.URL.Query().Get("limit")
 	limit := 50 // valor por defecto
