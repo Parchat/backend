@@ -69,7 +69,7 @@ func (s *DirectChatService) GetUserDirectChatsWithSenderNames(userID string) ([]
 
 // GetDirectChatMessages obtiene los mensajes de un chat directo
 func (s *DirectChatService) GetDirectChatMessages(directChatID string, limit int) ([]models.MessageResponse, error) {
-	return s.MessageRepo.GetDirectChatMessages(directChatID, limit)
+	return s.MessageRepo.GetDirectChatMessagesSimple(directChatID, limit)
 }
 
 // FindOrCreateDirectChat encuentra un chat directo entre dos usuarios o lo crea si no existe
