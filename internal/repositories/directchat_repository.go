@@ -13,12 +13,14 @@ import (
 // DirectChatRepository maneja las operaciones de base de datos para los chats directos
 type DirectChatRepository struct {
 	FirestoreClient *config.FirestoreClient
+	UserRepo        *UserRepository
 }
 
 // NewDirectChatRepository crea una nueva instancia de DirectChatRepository
-func NewDirectChatRepository(client *config.FirestoreClient) *DirectChatRepository {
+func NewDirectChatRepository(client *config.FirestoreClient, userRepo *UserRepository) *DirectChatRepository {
 	return &DirectChatRepository{
 		FirestoreClient: client,
+		UserRepo:        userRepo,
 	}
 }
 
@@ -111,6 +113,16 @@ func (r *DirectChatRepository) GetUserDirectChats(userID string) ([]models.Direc
 		if err := doc.DataTo(&chat); err != nil {
 			return nil, err
 		}
+
+		// Obtener los nombres actualizados de los usuarios
+		chat.DisplayNames = make([]string, len(chat.UserIDs))
+		for i, id := range chat.UserIDs {
+			user, err := r.UserRepo.GetUserByID(ctx, id)
+			if err == nil && user != nil {
+				chat.DisplayNames[i] = user.DisplayName
+			}
+		}
+
 		chats = append(chats, chat)
 	}
 
