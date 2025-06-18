@@ -27,6 +27,10 @@ definitions:
     properties:
       createdAt:
         type: string
+      displayNames:
+        items:
+          type: string
+        type: array
       id:
         type: string
       isDeleted:
@@ -271,6 +275,10 @@ paths:
             type: array
         "401":
           description: No autorizado
+          schema:
+            type: string
+        "403":
+          description: Acceso prohibido
           schema:
             type: string
         "404":
