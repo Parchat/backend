@@ -80,7 +80,9 @@ func NewRouter(
 					r.Get("/{roomId}", chatHandler.GetRoom)
 					r.Get("/{roomId}/messages", chatHandler.GetRoomMessagesSimple)
 					r.Get("/{roomId}/messages/paginated", chatHandler.GetRoomMessages)
-					r.Post("/{roomId}/join", chatHandler.JoinRoom) // Moderation routes
+					r.Post("/{roomId}/join", chatHandler.JoinRoom)
+
+					// Moderation routes
 					r.Post("/{roomId}/report", moderationHandler.ReportMessage)
 					r.Get("/{roomId}/banned-users", moderationHandler.GetBannedUsers)
 					r.Post("/{roomId}/clear-reports", moderationHandler.ClearUserReports)

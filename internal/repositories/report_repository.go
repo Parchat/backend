@@ -126,6 +126,25 @@ func (r *ReportRepository) DeleteReportsForUserInRoom(roomID, userID string) err
 	})
 }
 
+// HasUserReportedMessage checks if a user has already reported a specific message
+func (r *ReportRepository) HasUserReportedMessage(reporterID, messageID string) (bool, error) {
+	ctx := context.Background()
+
+	// Query reports for this reporter and message
+	query := r.FirestoreClient.Client.
+		Collection("reports").
+		Where("reporterId", "==", reporterID).
+		Where("messageId", "==", messageID)
+
+	// Check if any matching documents exist
+	docs, err := query.Documents(ctx).GetAll()
+	if err != nil {
+		return false, fmt.Errorf("error checking for existing report: %v", err)
+	}
+
+	return len(docs) > 0, nil
+}
+
 // UpdateRoomReportedUsers updates the reported users map in a room
 func (r *ReportRepository) UpdateRoomReportedUsers(roomID string, reportedUsers map[string]int) error {
 	ctx := context.Background()

@@ -51,6 +51,16 @@ func (s *ModerationService) ReportMessage(reporterID, roomID, messageID, reason 
 		return fmt.Errorf("users cannot report their own messages")
 	}
 
+	// Check if user has already reported this message
+	hasReported, err := s.reportRepo.HasUserReportedMessage(reporterID, messageID)
+	if err != nil {
+		return fmt.Errorf("error checking for existing report: %v", err)
+	}
+
+	if hasReported {
+		return fmt.Errorf("user has already reported this message")
+	}
+
 	// Create a report record
 	report := &models.Report{
 		ID:         uuid.New().String(),
