@@ -103,9 +103,7 @@ func (c *Client) ReadPump() {
 			if err := json.Unmarshal(wsMessage.Payload, &chatMsg); err != nil {
 				log.Printf("Error unmarshaling chat message: %v", err)
 				continue
-			}
-
-			// Verificar si el usuario es parte de la sala antes de enviar el mensaje
+			} // Verificar si el usuario es parte de la sala antes de enviar el mensaje
 			if !c.hub.roomRepo.CanTalkInRoomWebSocket(chatMsg.RoomID, c.userID) {
 				errMsg := "No permission to send messages to this room"
 				errorPayload, _ := json.Marshal(errMsg)
@@ -116,6 +114,22 @@ func (c *Client) ReadPump() {
 				}
 				log.Printf("User %s attempted to send message to room %s without permission", c.userID, chatMsg.RoomID)
 				continue
+			}
+
+			// Check if the user is banned from sending messages due to reports
+			room, err := c.hub.roomRepo.GetRoom(chatMsg.RoomID)
+			if err == nil && room.ReportedUsers != nil {
+				if reportCount, exists := room.ReportedUsers[c.userID]; exists && reportCount >= 3 {
+					errMsg := "You have been banned from sending messages in this room due to reports"
+					errorPayload, _ := json.Marshal(errMsg)
+					c.send <- WebSocketMessage{
+						Type:      MessageTypeError,
+						Payload:   errorPayload,
+						Timestamp: time.Now(),
+					}
+					log.Printf("User %s attempted to send message to room %s while banned", c.userID, chatMsg.RoomID)
+					continue
+				}
 			}
 
 			// Asignar ID y timestamps si no existen

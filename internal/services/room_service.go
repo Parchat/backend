@@ -78,6 +78,28 @@ func (s *RoomService) JoinRoom(roomID string, userID string) error {
 	return s.RoomRepo.AddMemberToRoom(roomID, userID)
 }
 
+// IsUserAdminOrOwner checks if a user is an admin or owner of a room
+func (s *RoomService) IsUserAdminOrOwner(roomID, userID string) (bool, error) {
+	room, err := s.RoomRepo.GetRoom(roomID)
+	if err != nil {
+		return false, fmt.Errorf("error getting room: %v", err)
+	}
+
+	// Check if user is the owner
+	if room.OwnerID == userID {
+		return true, nil
+	}
+
+	// Check if user is an admin
+	for _, adminID := range room.Admins {
+		if adminID == userID {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
 // Helper para verificar si un slice contiene un valor
 func contains(slice []string, value string) bool {
 	for _, item := range slice {
