@@ -18,6 +18,7 @@ func NewRouter(
 	chatHandler *handlers.ChatHandler,
 	webSocketHandler *handlers.WebSocketHandler,
 	authMw *authMiddleware.AuthMiddleware,
+	moderationHandler *handlers.ModerationHandler,
 ) *chi.Mux {
 	r := chi.NewRouter()
 
@@ -80,6 +81,11 @@ func NewRouter(
 					r.Get("/{roomId}/messages", chatHandler.GetRoomMessagesSimple)
 					r.Get("/{roomId}/messages/paginated", chatHandler.GetRoomMessages)
 					r.Post("/{roomId}/join", chatHandler.JoinRoom)
+
+					// Moderation routes
+					r.Post("/{roomId}/report", moderationHandler.ReportMessage)
+					r.Get("/{roomId}/banned-users", moderationHandler.GetBannedUsers)
+					r.Post("/{roomId}/clear-reports", moderationHandler.ClearUserReports)
 				})
 
 				// Rutas de chats directos

@@ -49,13 +49,16 @@ func main() {
 			repositories.NewRoomRepository,
 			repositories.NewDirectChatRepository,
 			repositories.NewMessageRepository,
+			repositories.NewReportRepository,
 			services.NewAuthService,
 			services.NewUserService,
 			services.NewRoomService,
 			services.NewDirectChatService,
+			services.NewModerationService,
 			handlers.NewAuthHandler,
 			handlers.NewUserHandler,
 			handlers.NewChatHandler,
+			handlers.NewModerationHandler,
 			middleware.NewAuthMiddleware,
 
 			// Proveedores de WebSocket

@@ -57,6 +57,28 @@ func (r *MessageRepository) SaveDirectMessage(message *models.Message) error {
 	return nil
 }
 
+// GetMessageByID retrieves a message by its ID from a specific room
+func (r *MessageRepository) GetMessageByID(roomID, messageID string) (*models.Message, error) {
+	ctx := context.Background()
+
+	// Get the message from the room's messages collection
+	doc, err := r.FirestoreClient.Client.
+		Collection("rooms").Doc(roomID).
+		Collection("messages").Doc(messageID).
+		Get(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting message: %v", err)
+	}
+
+	var message models.Message
+	if err := doc.DataTo(&message); err != nil {
+		return nil, fmt.Errorf("error converting document to message: %v", err)
+	}
+
+	return &message, nil
+}
+
 func (r *MessageRepository) GetRoomMessages(roomID string, limit int, cursor string) ([]models.MessageResponse, string, error) {
 	ctx := context.Background()
 

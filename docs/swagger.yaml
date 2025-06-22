@@ -9,6 +9,27 @@ definitions:
       password:
         type: string
     type: object
+  models.BannedUserResponse:
+    properties:
+      displayName:
+        type: string
+      reportCount:
+        type: integer
+      userId:
+        type: string
+    type: object
+  models.BannedUsersResponse:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/models.BannedUserResponse'
+        type: array
+    type: object
+  models.ClearReportRequest:
+    properties:
+      userId:
+        type: string
+    type: object
   models.CreateRoomRequest:
     properties:
       description:
@@ -94,6 +115,13 @@ definitions:
       nextCursor:
         type: string
     type: object
+  models.ReportRequest:
+    properties:
+      messageId:
+        type: string
+      reason:
+        type: string
+    type: object
   models.Room:
     properties:
       admins:
@@ -122,6 +150,11 @@ definitions:
         type: string
       ownerId:
         type: string
+      reportedUsers:
+        additionalProperties:
+          type: integer
+        description: Map of userID to report count
+        type: object
       updatedAt:
         type: string
     type: object
@@ -454,6 +487,94 @@ paths:
       summary: Obtiene una sala por ID
       tags:
       - Chat
+  /chat/rooms/{roomId}/banned-users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of users who have been banned in a chat room
+      parameters:
+      - description: Room ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Banned users
+          schema:
+            $ref: '#/definitions/models.BannedUsersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get banned users in a room
+      tags:
+      - Moderation
+  /chat/rooms/{roomId}/clear-reports:
+    post:
+      consumes:
+      - application/json
+      description: Clears all reports for a specific user in a chat room
+      parameters:
+      - description: Room ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: Clear Report Request
+        in: body
+        name: clearRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.ClearReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reports cleared successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Clear reports for a user
+      tags:
+      - Moderation
   /chat/rooms/{roomId}/join:
     post:
       consumes:
@@ -585,6 +706,55 @@ paths:
       summary: Obtiene mensajes de una sala
       tags:
       - Chat
+  /chat/rooms/{roomId}/report:
+    post:
+      consumes:
+      - application/json
+      description: Reports a message as inappropriate in a chat room
+      parameters:
+      - description: Room ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: Report Request
+        in: body
+        name: report
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Message reported successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Report an inappropriate message
+      tags:
+      - Moderation
   /chat/rooms/me:
     get:
       consumes:

@@ -33,6 +33,7 @@ type Hub struct {
 	messageRepo    *repositories.MessageRepository
 	roomRepo       *repositories.RoomRepository
 	directChatRepo *repositories.DirectChatRepository
+	reportRepo     *repositories.ReportRepository
 
 	// Firestore client
 	firestoreClient *config.FirestoreClient
@@ -43,6 +44,7 @@ func NewHub(
 	messageRepo *repositories.MessageRepository,
 	roomRepo *repositories.RoomRepository,
 	directChatRepo *repositories.DirectChatRepository,
+	reportRepo *repositories.ReportRepository,
 	client *config.FirestoreClient,
 ) *Hub {
 	return &Hub{
@@ -54,6 +56,7 @@ func NewHub(
 		messageRepo:     messageRepo,
 		roomRepo:        roomRepo,
 		directChatRepo:  directChatRepo,
+		reportRepo:      reportRepo,
 		firestoreClient: client,
 	}
 }
