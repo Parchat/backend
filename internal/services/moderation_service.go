@@ -21,6 +21,7 @@ type ModerationService struct {
 	messageRepo *repositories.MessageRepository
 	roomRepo    *repositories.RoomRepository
 	userRepo    *repositories.UserRepository
+	roomService *RoomService
 }
 
 // NewModerationService creates a new instance of ModerationService
@@ -29,12 +30,14 @@ func NewModerationService(
 	messageRepo *repositories.MessageRepository,
 	roomRepo *repositories.RoomRepository,
 	userRepo *repositories.UserRepository,
+	roomService *RoomService,
 ) *ModerationService {
 	return &ModerationService{
 		reportRepo:  reportRepo,
 		messageRepo: messageRepo,
 		roomRepo:    roomRepo,
 		userRepo:    userRepo,
+		roomService: roomService,
 	}
 }
 
@@ -49,6 +52,20 @@ func (s *ModerationService) ReportMessage(reporterID, roomID, messageID, reason 
 	// Don't allow users to report their own messages
 	if message.UserID == reporterID {
 		return fmt.Errorf("users cannot report their own messages")
+	}
+
+	// Check if the reporter is banned in the room
+	if !s.CanUserSendMessageInRoom(roomID, reporterID) {
+		return fmt.Errorf("banned users cannot report messages")
+	}
+
+	// Check if the reported message is from an admin or owner
+	isAdminOrOwner, err := s.roomService.IsUserAdminOrOwner(roomID, message.UserID)
+	if err != nil {
+		return fmt.Errorf("error checking user privileges: %v", err)
+	}
+	if isAdminOrOwner {
+		return fmt.Errorf("messages from admins or room owner cannot be reported")
 	}
 
 	// Check if user has already reported this message
