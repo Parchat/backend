@@ -113,15 +113,34 @@ func (r *DirectChatRepository) GetUserDirectChats(userID string) ([]models.Direc
 		if err := doc.DataTo(&chat); err != nil {
 			return nil, err
 		}
-
 		// Obtener los nombres actualizados de los usuarios
 		chat.DisplayNames = make([]string, len(chat.UserIDs))
-		for i, id := range chat.UserIDs {
-			user, err := r.UserRepo.GetUserByID(ctx, id)
-			if err == nil && user != nil {
-				chat.DisplayNames[i] = user.DisplayName
-			}
+
+		// Como solo hay dos usuarios en un chat directo
+		// Obtenemos el nombre del primer usuario
+		user0, err := r.UserRepo.GetUserByID(ctx, chat.UserIDs[0])
+		if err == nil && user0 != nil {
+			chat.DisplayNames[0] = user0.DisplayName
+		} else {
+			chat.DisplayNames[0] = "Usuario Desconocido"
 		}
+
+		// Obtenemos el nombre del segundo usuario
+		user1, err := r.UserRepo.GetUserByID(ctx, chat.UserIDs[1])
+		if err == nil && user1 != nil {
+			chat.DisplayNames[1] = user1.DisplayName
+		} else {
+			chat.DisplayNames[1] = "Usuario Desconocido"
+		}
+
+		// Si el usuario actual es el primer usuario, intercambiamos tanto los nombres como los IDs
+		if chat.UserIDs[0] == userID {
+			// Intercambiar DisplayNames
+			chat.DisplayNames[0], chat.DisplayNames[1] = chat.DisplayNames[1], chat.DisplayNames[0]
+			// Intercambiar UserIDs
+			chat.UserIDs[0], chat.UserIDs[1] = chat.UserIDs[1], chat.UserIDs[0]
+		}
+		// Ahora tanto en UserIDs como en DisplayNames, el otro usuario está primero y el usuario actual después
 
 		chats = append(chats, chat)
 	}
