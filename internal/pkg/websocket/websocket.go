@@ -260,13 +260,13 @@ func (c *Client) ReadPump() {
 				c.rooms[roomID] = true
 				log.Printf("User %s joined room %s", c.userID, roomID)
 				// Enviar mensaje de confirmación al usuario
-				successMsg := "Successfully joined room"
-				successPayload, _ := json.Marshal(successMsg)
-				c.send <- WebSocketMessage{
-					Type:      MessageTypeSuccess,
-					Payload:   successPayload,
-					Timestamp: time.Now(),
-				}
+				// successMsg := "Successfully joined room"
+				// successPayload, _ := json.Marshal(successMsg)
+				// c.send <- WebSocketMessage{
+				// 	Type:      MessageTypeSuccess,
+				// 	Payload:   successPayload,
+				// 	Timestamp: time.Now(),
+				// }
 			} else {
 				errMsg := "No permission to join this room"
 				errorPayload, _ := json.Marshal(errMsg)
@@ -290,13 +290,13 @@ func (c *Client) ReadPump() {
 				c.directChat[directChatID] = true
 				log.Printf("User %s joined direct chat %s", c.userID, directChatID)
 				// Enviar mensaje de confirmación al usuario
-				successMsg := "Successfully joined direct chat"
-				successPayload, _ := json.Marshal(successMsg)
-				c.send <- WebSocketMessage{
-					Type:      MessageTypeSuccess,
-					Payload:   successPayload,
-					Timestamp: time.Now(),
-				}
+				// successMsg := "Successfully joined direct chat"
+				// successPayload, _ := json.Marshal(successMsg)
+				// c.send <- WebSocketMessage{
+				// 	Type:      MessageTypeSuccess,
+				// 	Payload:   successPayload,
+				// 	Timestamp: time.Now(),
+				// }
 			} else {
 				errMsg := "Not a member of this direct chat"
 				errorPayload, _ := json.Marshal(errMsg)
