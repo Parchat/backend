@@ -1,11 +1,13 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"time"
 
 	"github.com/Parchat/backend/internal/models"
+	"github.com/Parchat/backend/internal/services"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
@@ -34,6 +36,7 @@ const (
 	MessageTypeJoinDirectChat MessageType = "JOIN_DIRECT_CHAT"
 	MessageTypeUserLeave      MessageType = "USER_LEAVE"
 	MessageTypeError          MessageType = "ERROR"
+	MessageTypeSuccess        MessageType = "SUCCESS"
 	MessageTypeRoomCreated    MessageType = "ROOM_CREATED"
 )
 
@@ -102,9 +105,7 @@ func (c *Client) ReadPump() {
 			if err := json.Unmarshal(wsMessage.Payload, &chatMsg); err != nil {
 				log.Printf("Error unmarshaling chat message: %v", err)
 				continue
-			}
-
-			// Verificar si el usuario es parte de la sala antes de enviar el mensaje
+			} // Verificar si el usuario es parte de la sala antes de enviar el mensaje
 			if !c.hub.roomRepo.CanTalkInRoomWebSocket(chatMsg.RoomID, c.userID) {
 				errMsg := "No permission to send messages to this room"
 				errorPayload, _ := json.Marshal(errMsg)
@@ -115,6 +116,22 @@ func (c *Client) ReadPump() {
 				}
 				log.Printf("User %s attempted to send message to room %s without permission", c.userID, chatMsg.RoomID)
 				continue
+			}
+
+			// Check if the user is banned from sending messages due to reports
+			room, err := c.hub.roomRepo.GetRoom(chatMsg.RoomID)
+			if err == nil && room.ReportedUsers != nil {
+				if reportCount, exists := room.ReportedUsers[c.userID]; exists && reportCount >= services.MaxReportsBeforeBan {
+					errMsg := "You have been banned from sending messages in this room due to reports"
+					errorPayload, _ := json.Marshal(errMsg)
+					c.send <- WebSocketMessage{
+						Type:      MessageTypeError,
+						Payload:   errorPayload,
+						Timestamp: time.Now(),
+					}
+					log.Printf("User %s attempted to send message to room %s while banned", c.userID, chatMsg.RoomID)
+					continue
+				}
 			}
 
 			// Asignar ID y timestamps si no existen
@@ -141,6 +158,16 @@ func (c *Client) ReadPump() {
 			err = c.hub.roomRepo.UpdateLastMessage(chatMsg.RoomID, &chatMsg)
 			if err != nil {
 				log.Printf("Error updating last message: %v", err)
+			}
+
+			// Obtener el displayName del usuario
+			ctx := context.Background()
+			userDoc, err := c.hub.firestoreClient.Client.Collection("users").Doc(c.userID).Get(ctx)
+			if err == nil {
+				var user models.User
+				if err := userDoc.DataTo(&user); err == nil {
+					chatMsg.DisplayName = user.DisplayName
+				}
 			}
 
 			// Convertir el mensaje de vuelta a JSON para difundir
@@ -200,6 +227,16 @@ func (c *Client) ReadPump() {
 				log.Printf("Error updating last message in direct chat: %v", err)
 			}
 
+			// Obtener el displayName del usuario
+			ctx := context.Background()
+			userDoc, err := c.hub.firestoreClient.Client.Collection("users").Doc(c.userID).Get(ctx)
+			if err == nil {
+				var user models.User
+				if err := userDoc.DataTo(&user); err == nil {
+					chatMsg.DisplayName = user.DisplayName
+				}
+			}
+
 			// Convertir el mensaje de vuelta a JSON para difundir
 			payload, _ := json.Marshal(chatMsg)
 			wsMessage.Payload = payload
@@ -222,6 +259,14 @@ func (c *Client) ReadPump() {
 			if c.hub.roomRepo.CanJoinRoomWebSocket(roomID, c.userID) {
 				c.rooms[roomID] = true
 				log.Printf("User %s joined room %s", c.userID, roomID)
+				// Enviar mensaje de confirmación al usuario
+				// successMsg := "Successfully joined room"
+				// successPayload, _ := json.Marshal(successMsg)
+				// c.send <- WebSocketMessage{
+				// 	Type:      MessageTypeSuccess,
+				// 	Payload:   successPayload,
+				// 	Timestamp: time.Now(),
+				// }
 			} else {
 				errMsg := "No permission to join this room"
 				errorPayload, _ := json.Marshal(errMsg)
@@ -244,6 +289,14 @@ func (c *Client) ReadPump() {
 			if c.hub.directChatRepo.IsUserInDirectChat(directChatID, c.userID) {
 				c.directChat[directChatID] = true
 				log.Printf("User %s joined direct chat %s", c.userID, directChatID)
+				// Enviar mensaje de confirmación al usuario
+				// successMsg := "Successfully joined direct chat"
+				// successPayload, _ := json.Marshal(successMsg)
+				// c.send <- WebSocketMessage{
+				// 	Type:      MessageTypeSuccess,
+				// 	Payload:   successPayload,
+				// 	Timestamp: time.Now(),
+				// }
 			} else {
 				errMsg := "Not a member of this direct chat"
 				errorPayload, _ := json.Marshal(errMsg)

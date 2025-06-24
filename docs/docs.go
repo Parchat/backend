@@ -147,7 +147,62 @@ const docTemplate = `{
                 }
             }
         },
-        "/chat/direct/{chatId}/messages/paginated": {
+        "/chat/direct/{chatId}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devuelve los detalles de un chat directo específico",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Obtiene un chat directo por ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID del chat directo",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles del chat directo",
+                        "schema": {
+                            "$ref": "#/definitions/models.DirectChat"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Chat no encontrado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/direct/{chatId}/messages": {
             "get": {
                 "security": [
                     {
@@ -193,6 +248,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "No autorizado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Acceso prohibido",
                         "schema": {
                             "type": "string"
                         }
@@ -463,6 +524,143 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/rooms/{roomId}/banned-users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of users who have been banned in a chat room",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Moderation"
+                ],
+                "summary": "Get banned users in a room",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Banned users",
+                        "schema": {
+                            "$ref": "#/definitions/models.BannedUsersResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/rooms/{roomId}/clear-reports": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Clears all reports for a specific user in a chat room",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Moderation"
+                ],
+                "summary": "Clear reports for a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Clear Report Request",
+                        "name": "clearRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ClearReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reports cleared successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/rooms/{roomId}/join": {
             "post": {
                 "security": [
@@ -595,6 +793,151 @@ const docTemplate = `{
                 }
             }
         },
+        "/chat/rooms/{roomId}/messages/paginated": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devuelve los mensajes de una sala específica con soporte para paginación ordernada por fecha de creación descendente",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Obtiene mensajes de una sala",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID de la sala",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Límite de mensajes a obtener",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "\"1747441934\"",
+                        "description": "Cursor para paginación (timestamp)",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mensajes paginados de la sala",
+                        "schema": {
+                            "$ref": "#/definitions/models.PaginatedMessagesResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Sala no encontrada",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/chat/rooms/{roomId}/report": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Reports a message as inappropriate in a chat room",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Moderation"
+                ],
+                "summary": "Report an inappropriate message",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Room ID",
+                        "name": "roomId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Report Request",
+                        "name": "report",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Message reported successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/chat/ws": {
             "get": {
                 "description": "Establece una conexión WebSocket para mensajería en tiempo real",
@@ -632,6 +975,40 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/create": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Verifica si el usuario autenticado existe en la base de datos, si no, lo crea con los datos de autenticación",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "Asegura que el usuario exista en la base de datos",
+                "responses": {
+                    "200": {
+                        "description": "Datos del usuario",
+                        "schema": {
+                            "$ref": "#/definitions/models.User"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -645,6 +1022,39 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.BannedUserResponse": {
+            "type": "object",
+            "properties": {
+                "displayName": {
+                    "type": "string"
+                },
+                "reportCount": {
+                    "type": "integer"
+                },
+                "userId": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.BannedUsersResponse": {
+            "type": "object",
+            "properties": {
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.BannedUserResponse"
+                    }
+                }
+            }
+        },
+        "models.ClearReportRequest": {
+            "type": "object",
+            "properties": {
+                "userId": {
                     "type": "string"
                 }
             }
@@ -676,6 +1086,12 @@ const docTemplate = `{
                 "createdAt": {
                     "type": "string"
                 },
+                "displayNames": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "id": {
                     "type": "string"
                 },
@@ -703,6 +1119,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "createdAt": {
+                    "type": "string"
+                },
+                "displayName": {
+                    "description": "Excluido de Firestore",
                     "type": "string"
                 },
                 "id": {
@@ -768,6 +1188,17 @@ const docTemplate = `{
                 }
             }
         },
+        "models.ReportRequest": {
+            "type": "object",
+            "properties": {
+                "messageId": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "models.Room": {
             "type": "object",
             "properties": {
@@ -809,6 +1240,13 @@ const docTemplate = `{
                 },
                 "ownerId": {
                     "type": "string"
+                },
+                "reportedUsers": {
+                    "description": "Map of userID to report count",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
                 },
                 "updatedAt": {
                     "type": "string"

@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"github.com/Parchat/backend/internal/config"
 	"github.com/Parchat/backend/internal/repositories"
 )
 
@@ -32,6 +33,10 @@ type Hub struct {
 	messageRepo    *repositories.MessageRepository
 	roomRepo       *repositories.RoomRepository
 	directChatRepo *repositories.DirectChatRepository
+	reportRepo     *repositories.ReportRepository
+
+	// Firestore client
+	firestoreClient *config.FirestoreClient
 }
 
 // NewHub inicializa un nuevo Hub
@@ -39,6 +44,8 @@ func NewHub(
 	messageRepo *repositories.MessageRepository,
 	roomRepo *repositories.RoomRepository,
 	directChatRepo *repositories.DirectChatRepository,
+	reportRepo *repositories.ReportRepository,
+	client *config.FirestoreClient,
 ) *Hub {
 	return &Hub{
 		clients:         make(map[*Client]bool),
@@ -49,6 +56,8 @@ func NewHub(
 		messageRepo:     messageRepo,
 		roomRepo:        roomRepo,
 		directChatRepo:  directChatRepo,
+		reportRepo:      reportRepo,
+		firestoreClient: client,
 	}
 }
 

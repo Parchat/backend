@@ -9,6 +9,27 @@ definitions:
       password:
         type: string
     type: object
+  models.BannedUserResponse:
+    properties:
+      displayName:
+        type: string
+      reportCount:
+        type: integer
+      userId:
+        type: string
+    type: object
+  models.BannedUsersResponse:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/models.BannedUserResponse'
+        type: array
+    type: object
+  models.ClearReportRequest:
+    properties:
+      userId:
+        type: string
+    type: object
   models.CreateRoomRequest:
     properties:
       description:
@@ -27,6 +48,10 @@ definitions:
     properties:
       createdAt:
         type: string
+      displayNames:
+        items:
+          type: string
+        type: array
       id:
         type: string
       isDeleted:
@@ -45,6 +70,9 @@ definitions:
       content:
         type: string
       createdAt:
+        type: string
+      displayName:
+        description: Excluido de Firestore
         type: string
       id:
         type: string
@@ -87,6 +115,13 @@ definitions:
       nextCursor:
         type: string
     type: object
+  models.ReportRequest:
+    properties:
+      messageId:
+        type: string
+      reason:
+        type: string
+    type: object
   models.Room:
     properties:
       admins:
@@ -115,6 +150,11 @@ definitions:
         type: string
       ownerId:
         type: string
+      reportedUsers:
+        additionalProperties:
+          type: integer
+        description: Map of userID to report count
+        type: object
       updatedAt:
         type: string
     type: object
@@ -206,7 +246,42 @@ paths:
       summary: Registra un nuevo usuario
       tags:
       - Auth
-  /chat/direct/{chatId}/messages/paginated:
+  /chat/direct/{chatId}:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve los detalles de un chat directo específico
+      parameters:
+      - description: ID del chat directo
+        in: path
+        name: chatId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Detalles del chat directo
+          schema:
+            $ref: '#/definitions/models.DirectChat'
+        "401":
+          description: No autorizado
+          schema:
+            type: string
+        "404":
+          description: Chat no encontrado
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtiene un chat directo por ID
+      tags:
+      - Chat
+  /chat/direct/{chatId}/messages:
     get:
       consumes:
       - application/json
@@ -233,6 +308,10 @@ paths:
             type: array
         "401":
           description: No autorizado
+          schema:
+            type: string
+        "403":
+          description: Acceso prohibido
           schema:
             type: string
         "404":
@@ -408,6 +487,94 @@ paths:
       summary: Obtiene una sala por ID
       tags:
       - Chat
+  /chat/rooms/{roomId}/banned-users:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of users who have been banned in a chat room
+      parameters:
+      - description: Room ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Banned users
+          schema:
+            $ref: '#/definitions/models.BannedUsersResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Get banned users in a room
+      tags:
+      - Moderation
+  /chat/rooms/{roomId}/clear-reports:
+    post:
+      consumes:
+      - application/json
+      description: Clears all reports for a specific user in a chat room
+      parameters:
+      - description: Room ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: Clear Report Request
+        in: body
+        name: clearRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.ClearReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reports cleared successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Clear reports for a user
+      tags:
+      - Moderation
   /chat/rooms/{roomId}/join:
     post:
       consumes:
@@ -493,6 +660,101 @@ paths:
       summary: Obtiene mensajes de una sala (versión simple)
       tags:
       - Chat
+  /chat/rooms/{roomId}/messages/paginated:
+    get:
+      consumes:
+      - application/json
+      description: Devuelve los mensajes de una sala específica con soporte para paginación
+        ordernada por fecha de creación descendente
+      parameters:
+      - description: ID de la sala
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - default: 50
+        description: Límite de mensajes a obtener
+        in: query
+        name: limit
+        type: integer
+      - default: '"1747441934"'
+        description: Cursor para paginación (timestamp)
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mensajes paginados de la sala
+          schema:
+            $ref: '#/definitions/models.PaginatedMessagesResponse'
+        "401":
+          description: No autorizado
+          schema:
+            type: string
+        "404":
+          description: Sala no encontrada
+          schema:
+            type: string
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Obtiene mensajes de una sala
+      tags:
+      - Chat
+  /chat/rooms/{roomId}/report:
+    post:
+      consumes:
+      - application/json
+      description: Reports a message as inappropriate in a chat room
+      parameters:
+      - description: Room ID
+        in: path
+        name: roomId
+        required: true
+        type: string
+      - description: Report Request
+        in: body
+        name: report
+        required: true
+        schema:
+          $ref: '#/definitions/models.ReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Message reported successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+          schema:
+            type: string
+        "404":
+          description: Not found
+          schema:
+            type: string
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Report an inappropriate message
+      tags:
+      - Moderation
   /chat/rooms/me:
     get:
       consumes:
@@ -545,6 +807,28 @@ paths:
       summary: Conexión WebSocket para chat en tiempo real
       tags:
       - Chat
+  /user/create:
+    post:
+      consumes:
+      - application/json
+      description: Verifica si el usuario autenticado existe en la base de datos,
+        si no, lo crea con los datos de autenticación
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Datos del usuario
+          schema:
+            $ref: '#/definitions/models.User'
+        "500":
+          description: Error interno del servidor
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Asegura que el usuario exista en la base de datos
+      tags:
+      - User
 securityDefinitions:
   BearerAuth:
     in: header

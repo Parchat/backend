@@ -127,14 +127,14 @@ func (h *ChatHandler) GetUserRooms(w http.ResponseWriter, r *http.Request) {
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			roomId	path		string			true	"ID de la sala"
-//	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
-//	@Param			cursor	query		string			false	"Cursor para paginación (timestamp)" default("1747441934")
+//	@Param			roomId	path		string								true	"ID de la sala"
+//	@Param			limit	query		int									false	"Límite de mensajes a obtener"			default(50)
+//	@Param			cursor	query		string								false	"Cursor para paginación (timestamp)"	default("1747441934")
 //	@Success		200		{object}	models.PaginatedMessagesResponse	"Mensajes paginados de la sala"
-//	@Failure		401		{string}	string			"No autorizado"
-//	@Failure		404		{string}	string			"Sala no encontrada"
-//	@Failure		500		{string}	string			"Error interno del servidor"
-//	@Router			/chat/rooms/{roomId}/messages [get]
+//	@Failure		401		{string}	string								"No autorizado"
+//	@Failure		404		{string}	string								"Sala no encontrada"
+//	@Failure		500		{string}	string								"Error interno del servidor"
+//	@Router			/chat/rooms/{roomId}/messages/paginated [get]
 func (h *ChatHandler) GetRoomMessages(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
 
@@ -224,7 +224,7 @@ func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	chats, err := h.DirectChatService.GetUserDirectChats(userID)
+	chats, err := h.DirectChatService.GetUserDirectChatsWithSenderNames(userID)
 	if err != nil {
 		http.Error(w, "Error getting direct chats: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -245,11 +245,25 @@ func (h *ChatHandler) GetUserDirectChats(w http.ResponseWriter, r *http.Request)
 //	@Param			limit	query		int				false	"Límite de mensajes a obtener"	default(50)
 //	@Success		200		{array}		models.Message	"Lista de mensajes del chat directo"
 //	@Failure		401		{string}	string			"No autorizado"
+//	@Failure		403		{string}	string			"Acceso prohibido"
 //	@Failure		404		{string}	string			"Chat no encontrado"
 //	@Failure		500		{string}	string			"Error interno del servidor"
-//	@Router			/chat/direct/{chatId}/messages/paginated [get]
+//	@Router			/chat/direct/{chatId}/messages [get]
 func (h *ChatHandler) GetDirectChatMessages(w http.ResponseWriter, r *http.Request) {
 	chatID := chi.URLParam(r, "chatId")
+
+	// Obtener el ID del usuario del contexto
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	// Verificar si el usuario pertenece al chat directo
+	if !h.DirectChatService.DirectChatRepo.IsUserInDirectChat(chatID, userID) {
+		http.Error(w, "Unauthorized access to this chat", http.StatusForbidden)
+		return
+	}
 
 	limitStr := r.URL.Query().Get("limit")
 	limit := 50 // valor por defecto
@@ -342,19 +356,19 @@ func (h *ChatHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 
 // GetRoomMessagesSimple obtiene los mensajes de una sala sin paginación
 //
-// @Summary      Obtiene mensajes de una sala (versión simple)
-// @Description  Devuelve los mensajes de una sala específica sin paginación
-// @Tags         Chat
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        roomId   path        string          true  "ID de la sala"
-// @Param        limit    query       int             false "Límite de mensajes a obtener" default(50)
-// @Success      200      {array}     models.MessageResponse "Lista de mensajes de la sala"
-// @Failure      401      {string}    string          "No autorizado"
-// @Failure      404      {string}    string          "Sala no encontrada"
-// @Failure      500      {string}    string          "Error interno del servidor"
-// @Router       /chat/rooms/{roomId}/messages [get]
+//	@Summary		Obtiene mensajes de una sala (versión simple)
+//	@Description	Devuelve los mensajes de una sala específica sin paginación
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			roomId	path		string					true	"ID de la sala"
+//	@Param			limit	query		int						false	"Límite de mensajes a obtener"	default(50)
+//	@Success		200		{array}		models.MessageResponse	"Lista de mensajes de la sala"
+//	@Failure		401		{string}	string					"No autorizado"
+//	@Failure		404		{string}	string					"Sala no encontrada"
+//	@Failure		500		{string}	string					"Error interno del servidor"
+//	@Router			/chat/rooms/{roomId}/messages [get]
 func (h *ChatHandler) GetRoomMessagesSimple(w http.ResponseWriter, r *http.Request) {
 	roomID := chi.URLParam(r, "roomId")
 
@@ -375,4 +389,51 @@ func (h *ChatHandler) GetRoomMessagesSimple(w http.ResponseWriter, r *http.Reque
 	}
 
 	json.NewEncoder(w).Encode(messages)
+}
+
+// GetChat obtiene un chat directo por ID
+//
+//	@Summary		Obtiene un chat directo por ID
+//	@Description	Devuelve los detalles de un chat directo específico
+//	@Tags			Chat
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			chatId	path		string				true	"ID del chat directo"
+//	@Success		200		{object}	models.DirectChat	"Detalles del chat directo"
+//	@Failure		401		{string}	string				"No autorizado"
+//	@Failure		404		{string}	string				"Chat no encontrado"
+//	@Failure		500		{string}	string				"Error interno del servidor"
+//	@Router			/chat/direct/{chatId} [get]
+func (h *ChatHandler) GetChat(w http.ResponseWriter, r *http.Request) {
+	chatID := chi.URLParam(r, "chatId")
+
+	// Obtener el ID del usuario del contexto
+	userID, ok := r.Context().Value("userID").(string)
+	if !ok {
+		http.Error(w, "User ID not found in context", http.StatusInternalServerError)
+		return
+	}
+
+	chat, err := h.DirectChatService.GetDirectChatWithSenderName(chatID)
+	if err != nil {
+		http.Error(w, "Error getting chat: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Verificar si el usuario tiene acceso a este chat
+	hasAccess := false
+	for _, id := range chat.UserIDs {
+		if id == userID {
+			hasAccess = true
+			break
+		}
+	}
+
+	if !hasAccess {
+		http.Error(w, "Unauthorized access to this chat", http.StatusForbidden)
+		return
+	}
+
+	json.NewEncoder(w).Encode(chat)
 }

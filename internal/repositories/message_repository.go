@@ -57,6 +57,28 @@ func (r *MessageRepository) SaveDirectMessage(message *models.Message) error {
 	return nil
 }
 
+// GetMessageByID retrieves a message by its ID from a specific room
+func (r *MessageRepository) GetMessageByID(roomID, messageID string) (*models.Message, error) {
+	ctx := context.Background()
+
+	// Get the message from the room's messages collection
+	doc, err := r.FirestoreClient.Client.
+		Collection("rooms").Doc(roomID).
+		Collection("messages").Doc(messageID).
+		Get(ctx)
+
+	if err != nil {
+		return nil, fmt.Errorf("error getting message: %v", err)
+	}
+
+	var message models.Message
+	if err := doc.DataTo(&message); err != nil {
+		return nil, fmt.Errorf("error converting document to message: %v", err)
+	}
+
+	return &message, nil
+}
+
 func (r *MessageRepository) GetRoomMessages(roomID string, limit int, cursor string) ([]models.MessageResponse, string, error) {
 	ctx := context.Background()
 
@@ -139,17 +161,18 @@ func (r *MessageRepository) GetRoomMessages(roomID string, limit int, cursor str
 	return response, nextCursor, nil
 }
 
-// GetDirectChatMessages obtiene los mensajes de un chat directo
-func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int) ([]models.MessageResponse, error) {
+// GetDirectChatMessagesSimple obtiene los mensajes de un chat directo sin paginación
+func (r *MessageRepository) GetDirectChatMessagesSimple(directChatID string, limit int) ([]models.MessageResponse, error) {
 	ctx := context.Background()
 
 	var messages []models.Message
 	var response []models.MessageResponse
 
+	// Obtener mensajes en orden descendente (más recientes primero)
 	messagesRef := r.FirestoreClient.Client.
 		Collection("directChats").Doc(directChatID).
 		Collection("messages").
-		OrderBy("createdAt", firestore.Asc).
+		OrderBy("createdAt", firestore.Desc).
 		Limit(limit)
 
 	docs, err := messagesRef.Documents(ctx).GetAll()
@@ -182,6 +205,8 @@ func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int
 		}
 	}
 
+	// Crear respuestas con DisplayName
+	var responseTemp []models.MessageResponse
 	for _, message := range messages {
 		msgMap := models.MessageResponse{
 			Message: message,
@@ -192,7 +217,12 @@ func (r *MessageRepository) GetDirectChatMessages(directChatID string, limit int
 			msgMap.DisplayName = displayName
 		}
 
-		response = append(response, msgMap)
+		responseTemp = append(responseTemp, msgMap)
+	}
+
+	// Invertir el orden para que queden en orden ascendente (más antiguos primero)
+	for i := len(responseTemp) - 1; i >= 0; i-- {
+		response = append(response, responseTemp[i])
 	}
 
 	return response, nil
@@ -205,10 +235,11 @@ func (r *MessageRepository) GetRoomMessagesSimple(roomID string, limit int) ([]m
 	var messages []models.Message
 	var response []models.MessageResponse
 
+	// Obtener mensajes en orden descendente (más recientes primero)
 	messagesRef := r.FirestoreClient.Client.
 		Collection("rooms").Doc(roomID).
 		Collection("messages").
-		OrderBy("createdAt", firestore.Asc).
+		OrderBy("createdAt", firestore.Desc).
 		Limit(limit)
 
 	docs, err := messagesRef.Documents(ctx).GetAll()
@@ -243,13 +274,19 @@ func (r *MessageRepository) GetRoomMessagesSimple(roomID string, limit int) ([]m
 		}
 	}
 
-	// Construir la respuesta con los displayNames
+	// Crear respuestas con DisplayName
+	var responseTemp []models.MessageResponse
 	for _, message := range messages {
 		msgResponse := models.MessageResponse{
 			Message:     message,
 			DisplayName: userDataCache[message.UserID], // Puede estar vacío si no se encontró
 		}
-		response = append(response, msgResponse)
+		responseTemp = append(responseTemp, msgResponse)
+	}
+
+	// Invertir el orden para que queden en orden ascendente (más antiguos primero)
+	for i := len(responseTemp) - 1; i >= 0; i-- {
+		response = append(response, responseTemp[i])
 	}
 
 	return response, nil
