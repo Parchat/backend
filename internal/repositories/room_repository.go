@@ -244,9 +244,9 @@ func (r *RoomRepository) AddMemberToRoom(roomID string, userID string) error {
 	}
 
 	// Si la sala es privada, no puede unirse
-	if room.IsPrivate {
-		return fmt.Errorf("room is private, user cannot join")
-	}
+	// if room.IsPrivate {
+	// 	return fmt.Errorf("room is private, user cannot join")
+	// }
 
 	// Añadir el usuario como miembro y actualizar la fecha de modificación
 	_, err = r.FirestoreClient.Client.Collection("rooms").Doc(roomID).Update(ctx, []firestore.Update{
