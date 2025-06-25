@@ -257,8 +257,8 @@ func (c *Client) ReadPump() {
 
 			// Verificar si el usuario tiene permiso para unirse a la sala
 			// if c.hub.roomRepo.CanJoinRoomWebSocket(roomID, c.userID) {
-			// 	c.rooms[roomID] = true
-			// 	log.Printf("User %s joined room %s", c.userID, roomID)
+			c.rooms[roomID] = true
+			log.Printf("User %s joined room %s", c.userID, roomID)
 			// 	// Enviar mensaje de confirmación al usuario
 			// 	// successMsg := "Successfully joined room"
 			// 	// successPayload, _ := json.Marshal(successMsg)
