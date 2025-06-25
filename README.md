@@ -1,6 +1,17 @@
 # API de Parchat
 
-Este proyecto implementa una API para una plataforma de mensajería utilizando Go, Fx para la gestión de dependencias y Firebase Authentication para la autenticación de usuarios.
+Este proyecto implementa una API para una plataforma de mensajería utilizando Go, Fx para la gestión de dependencias, Firebase Authentication para la autenticación de usuarios, Firestore como base de datos en tiempo real y WebSockets para la comunicación bidireccional en tiempo real. La arquitectura está diseñada para soportar chats en grupo, mensajería directa entre usuarios y moderación de contenido.
+
+## Tecnologías principales
+
+- **Go**: Lenguaje de programación principal, elegido por su rendimiento y concurrencia.
+- **Uber Fx**: Framework de inyección de dependencias para mantener una arquitectura limpia y modular.
+- **Firebase Authentication**: Gestión de usuarios y autenticación segura.
+- **Firestore**: Base de datos NoSQL en tiempo real para almacenar salas de chat, mensajes y perfiles de usuario.
+- **WebSockets**: Implementación de comunicación bidireccional en tiempo real para mensajería instantánea.
+- **Chi Router**: Router HTTP ligero y eficiente para Go.
+- **Swagger**: Documentación automática de la API.
+- **Docker**: Contenedorización para facilitar el despliegue y desarrollo.
 
 ## Estructura del Proyecto
 
@@ -8,26 +19,50 @@ Este proyecto implementa una API para una plataforma de mensajería utilizando G
 .
 ├── cmd
 │   └── api
-│       └── main.go           # Punto de entrada de la aplicación
+│       └── main.go                    # Punto de entrada de la aplicación
 ├── internal
-│   ├── auth
-│   │   └── firebase.go       # Integración con Firebase Auth
 │   ├── config
-│   │   └── config.go         # Configuración de la aplicación
+│   │   ├── config.go                  # Configuración de la aplicación
+│   │   ├── firebase.go                # Configuración de Firebase
+│   │   └── swagger.go                 # Configuración de Swagger
 │   ├── handlers
-│   │   └── user_handler.go   # Manejadores HTTP
+│   │   ├── auth_handler.go            # Manejadores de autenticación
+│   │   ├── chat_handler.go            # Manejadores de chat
+│   │   ├── moderation_handler.go      # Manejadores de moderación
+│   │   ├── user_handler.go            # Manejadores de usuarios
+│   │   └── websocket_handler.go       # Manejadores de WebSocket
 │   ├── middleware
-│   │   └── auth_middleware.go # Middleware de autenticación
+│   │   └── auth_middleware.go         # Middleware de autenticación
 │   ├── models
-│   │   └── user.go           # Modelos de datos
+│   │   ├── directchat.go              # Modelo de chat directo
+│   │   ├── message.go                 # Modelo de mensaje
+│   │   ├── report.go                  # Modelo de reporte
+│   │   ├── room.go                    # Modelo de sala de chat
+│   │   └── user.go                    # Modelo de usuario
+│   ├── pkg
+│   │   └── websocket
+│   │       ├── hub.go                 # Hub de WebSocket
+│   │       └── websocket.go           # Implementación de WebSocket
+│   ├── repositories
+│   │   ├── directchat_repository.go   # Repositorio de chat directo
+│   │   ├── message_repository.go      # Repositorio de mensajes
+│   │   ├── report_repository.go       # Repositorio de reportes
+│   │   ├── room_repository.go         # Repositorio de salas
+│   │   └── user_repository.go         # Repositorio de usuarios
 │   ├── routes
-│   │   └── router.go         # Definición de rutas
+│   │   └── router.go                  # Definición de rutas
 │   └── services
-│       └── user_service.go   # Lógica de negocio
-├── docs                      # Documentación generada por Swagger
-├── .env.example              # Ejemplo de variables de entorno
-├── go.mod                    # Dependencias de Go
-└── README.md                 # Documentación
+│       ├── auth_service.go            # Servicio de autenticación
+│       ├── directchat_service.go      # Servicio de chat directo
+│       ├── moderation_service.go      # Servicio de moderación
+│       ├── room_service.go            # Servicio de salas
+│       └── user_service.go            # Servicio de usuarios
+├── docs                               # Documentación generada por Swagger
+├── compose.yml                        # Configuración de Docker Compose
+├── Dockerfile.dev                     # Dockerfile para desarrollo
+├── Dockerfile.prod                    # Dockerfile para producción
+├── go.mod                             # Dependencias de Go
+└── README.md                          # Documentación
 ```
 
 ## Requisitos
@@ -84,23 +119,88 @@ Una vez iniciado el servidor puedes acceder a la documentación desde [http://lo
 
 ### Protegidos (requieren token JWT)
 
+Para acceder a los endpoints protegidos, debes incluir un token de ID de Firebase en el encabezado `Authorization`:
+
+```
+Authorization: Bearer <token>
+```
+
 #### Autenticación
 - `GET /api/v1/auth/me`: Obtiene información del usuario actual
+- `POST /api/v1/user/create`: Asegura que el usuario exista en la base de datos
 
 #### Salas de Chat
 - `POST /api/v1/chat/rooms`: Crea una nueva sala de chat
-- `GET /api/v1/chat/rooms`: Obtiene todas las salas del usuario actual
+- `GET /api/v1/chat/rooms`: Obtiene todas las salas disponibles
+- `GET /api/v1/chat/rooms/me`: Obtiene todas las salas del usuario actual
 - `GET /api/v1/chat/rooms/{roomId}`: Obtiene información de una sala específica
 - `GET /api/v1/chat/rooms/{roomId}/messages`: Obtiene mensajes de una sala específica
 - `GET /api/v1/chat/rooms/{roomId}/messages/paginated`: Obtiene mensajes de una sala específica paginados
+- `POST /api/v1/chat/rooms/{roomId}/join`: Une al usuario a una sala específica
 
 #### Chats Directos
 - `POST /api/v1/chat/direct/{otherUserId}`: Crea un chat directo entre el usuario autenticado y otro usuario
 - `GET /api/v1/chat/direct/me`: Obtiene todos los chats directos del usuario actual
+- `GET /api/v1/chat/direct/{chatId}`: Obtiene información de un chat directo específico
 - `GET /api/v1/chat/direct/{chatId}/messages`: Obtiene mensajes de un chat directo específico
+
+#### Moderación
+- `POST /api/v1/chat/rooms/{roomId}/report`: Reporta un mensaje inapropiado
+- `GET /api/v1/chat/rooms/{roomId}/banned-users`: Obtiene usuarios baneados en una sala (solo admins)
+- `POST /api/v1/chat/rooms/{roomId}/clear-reports`: Elimina reportes de un usuario en una sala (solo admins)
 
 #### WebSocket
 - `GET /api/v1/chat/ws`: Endpoint para establecer conexión WebSocket
+
+## Implementación técnica
+
+### Firestore
+
+El proyecto utiliza Firestore como base de datos principal, aprovechando sus capacidades NoSQL y de tiempo real:
+
+- **Colecciones**: 
+  - `users`: Almacena perfiles de usuario
+  - `rooms`: Almacena información de salas de chat
+  - `messages`: Almacena mensajes enviados en salas de chat
+  - `directChats`: Almacena conversaciones directas entre usuarios
+  - `reports`: Almacena reportes de contenido inapropiado
+
+- **Ventajas**:
+  - Sincronización en tiempo real entre clientes
+  - Escalabilidad automática
+  - Consultas eficientes mediante índices
+  - Integración nativa con Firebase Authentication
+
+### WebSockets
+
+La implementación de WebSockets permite una comunicación bidireccional en tiempo real:
+
+- **Hub central**: Gestiona todas las conexiones activas de WebSocket
+- **Canales de comunicación**: 
+  - Salas de chat (rooms)
+  - Chats directos entre usuarios
+- **Tipos de mensajes**: La aplicación utiliza un sistema de tipos para diferenciar entre diferentes eventos (ver sección "Tipos de mensajes WebSocket")
+- **Autenticación**: Cada conexión WebSocket se autentica mediante tokens JWT
+
+La arquitectura WebSocket está diseñada para:
+- Mantener miles de conexiones simultáneas
+- Entregar mensajes en tiempo real con baja latencia
+- Manejar reconexiones automáticas
+- Proporcionar feedback inmediato sobre el estado de los mensajes
+
+#### Tipos de mensajes WebSocket
+
+El sistema utiliza los siguientes tipos de mensajes para la comunicación WebSocket:
+
+- `CHAT_ROOM`: Enviar un mensaje a una sala de chat
+- `DIRECT_CHAT`: Enviar un mensaje a un chat directo
+- `JOIN_ROOM`: Unirse a una sala de chat
+- `JOIN_DIRECT_CHAT`: Unirse a un chat directo
+- `USER_LEAVE`: Notificar que un usuario ha abandonado un chat
+- `ERROR`: Mensaje de error
+- `SUCCESS`: Mensaje de operación exitosa
+- `ROOM_CREATED`: Notificación de que se ha creado una sala
+
 
 ## Flujo de Chat Directo
 
@@ -132,6 +232,7 @@ La respuesta será un JSON con los detalles del chat directo creado (o existente
 {
   "id": "chat-id-123456",
   "userIds": ["tu-usuario-id", "ID_DEL_OTRO_USUARIO"],
+  "displayNames": ["Nombre Del Otro Usuario", "Tu Nombre"],
   "createdAt": "2025-05-13T10:15:30Z",
   "updatedAt": "2025-05-13T10:15:30Z"
 }
@@ -170,14 +271,6 @@ Para enviar un mensaje:
      "timestamp": "2025-05-13T10:17:00Z"
    }
    ```
-
-## Autenticación
-
-Para acceder a los endpoints protegidos, debes incluir un token de ID de Firebase en el encabezado `Authorization`:
-
-```
-Authorization: Bearer <token>
-```
 
 ## Desarrollo
 
