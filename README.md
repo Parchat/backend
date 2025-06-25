@@ -6,22 +6,22 @@
 
 ## 📚 Índice
 
-* [🧰 Tecnologías principales](#tecnologías-principales)
-* [🗂️ Estructura del Proyecto](#️estructura-del-proyecto)
-* [✅ Requisitos](#requisitos)
-* [⚙️ Configuración](#configuración)
-* [▶️ Ejecución](#️ejecución)
-* [📖 Documentación API (Swagger)](#documentación-api-swagger)
-* [🔐 Endpoints](#endpoints)
+* [🧰 Tecnologías principales](#-tecnologías-principales)
+* [🗂️ Estructura del Proyecto](#-estructura-del-proyecto)
+* [✅ Requisitos](#-requisitos)
+* [⚙️ Configuración](#-configuración)
+* [▶️ Ejecución](#-ejecución)
+* [📖 Documentación API (Swagger)](#-documentación-api-swagger)
+* [🔐 Endpoints](#-endpoints)
 
   * [🟢 Públicos](#-públicos)
-  * [🔒 Protegidos (requieren token JWT)](#protegidos-requieren-token-jwt)
-* [⚙️ Implementación técnica](#implementación-técnica)
+  * [🔒 Protegidos (requieren token JWT)](#-protegidos-requieren-token-jwt)
+* [⚙️ Implementación técnica](#-implementación-técnica)
 
-  * [🧩 Firestore](#firestore)
-* [🌐 WebSockets](#websockets)
-* [💬 Flujo de Chat Directo](#flujo-de-chat-directo)
-* [🚧 Desarrollo](#desarrollo)
+  * [🧩 Firestore](#-firestore)
+* [🌐 WebSockets](#-websockets)
+* [💬 Flujo de Chat Directo](#-flujo-de-chat-directo)
+* [🚧 Desarrollo](#-desarrollo)
 
 ---
 
