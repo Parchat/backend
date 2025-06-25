@@ -69,10 +69,10 @@ func (s *RoomService) GetAllRooms() ([]models.Room, error) {
 // JoinRoom permite a un usuario unirse a una sala si tiene permiso
 func (s *RoomService) JoinRoom(roomID string, userID string) error {
 	// Verificar si el usuario puede unirse a la sala
-	canJoin := s.RoomRepo.CanJoinRoomWebSocket(roomID, userID)
-	if !canJoin {
-		return fmt.Errorf("user is not allowed to join this room")
-	}
+	// canJoin := s.RoomRepo.CanJoinRoomWebSocket(roomID, userID)
+	// if !canJoin {
+	// 	return fmt.Errorf("user is not allowed to join this room")
+	// }
 
 	// Añadir usuario a la sala
 	return s.RoomRepo.AddMemberToRoom(roomID, userID)
